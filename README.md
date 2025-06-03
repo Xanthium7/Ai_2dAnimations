@@ -227,12 +227,6 @@ black .
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-### Development Guidelines
-
-1. Follow the existing code style
-2. Add comments for complex animation logic
-3. Test your animations before submitting
-4. Update documentation as needed
 
 ## 📄 License
 
