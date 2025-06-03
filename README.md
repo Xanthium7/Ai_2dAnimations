@@ -1,18 +1,9 @@
-# 🎬 Manimations - AI-Powered 2D Animation Framework
+# 🎬 Lumi - AI-Powered 2D Animation Software
 
 An intelligent AI framework that generates high-quality, educational 2D animations using the Manim library. Transform your ideas into stunning visual explanations with the power of AI and mathematical animation.
 
 # Working
 
-
-
-## ✨ Features
-
-- 🤖 **AI-Powered Animation Generation**: Convert natural language descriptions into executable Manim code
-- 📚 **Educational Focus**: Optimized for creating clear, pedagogical animations
-- 🎨 **Multiple AI Providers**: Support for Google Gemini and Groq APIs
-- 🔧 **Clean Code Generation**: Produces well-structured, commented, and maintainable Manim code
-- 🎯 **Lumi Assistant**: Specialized AI assistant designed for Manim animation expertise
 
 ## 🚀 Quick Start
 
