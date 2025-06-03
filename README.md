@@ -2,6 +2,10 @@
 
 An intelligent AI framework that generates high-quality, educational 2D animations using the Manim library. Transform your ideas into stunning visual explanations with the power of AI and mathematical animation.
 
+# Working
+
+
+
 ## ✨ Features
 
 - 🤖 **AI-Powered Animation Generation**: Convert natural language descriptions into executable Manim code
