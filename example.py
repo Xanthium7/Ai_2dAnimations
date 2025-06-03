@@ -1,243 +1,386 @@
 from manim import *
 
+# Constants
+EARTH_ORBIT_RADIUS = 3.5
+EARTH_RADIUS = 0.4
+AXIAL_TILT = 23.5 * DEGREES  # 23.5 degrees in radians
 
-class SetTheoryEquation(Scene):
+
+class Scene1_IntroductionToOrbital(Scene):
     def construct(self):
-        # --- Constants and Mobjects Setup ---
-        # Define custom colors for better visual distinction
-        COLOR_A_REGION = BLUE_A
-        COLOR_B_REGION = RED_B
-        # This color visually represents the intersection when both A and B contribute to it,
-        # indicating it's "double-counted" conceptually before correction.
-        COLOR_INTERSECTION_DOUBLE_COUNTED = PURPLE_D
-        # This color represents the final union region, where the intersection is counted once.
-        COLOR_UNION_FINAL = GREEN_D
+        # Sun at center
+        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
+        # Earth's orbital path (Ellipse approximated as Circle for simplicity)
+        sun_label = Text("The Sun", color=WHITE).next_to(sun, DOWN, buff=0.3)
+        orbit = Circle(radius=EARTH_ORBIT_RADIUS, color=WHITE,
+                       stroke_opacity=0.5)
+        orbit_label = Text("Earth's Orbit", color=WHITE).next_to(
+            orbit, UP, buff=0.3)
 
-        # Display the main equation at the top of the screen
-        equation_tex = Tex(
-            r"$A \cup B = A + B - A \cap B$").to_edge(UP).scale(1.2)
-        self.play(Write(equation_tex))
-        # Create two overlapping circles for the Venn Diagram outlines
+        # Earth at starting point (to the right of Sun)
+        earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        earth.shift(RIGHT * EARTH_ORBIT_RADIUS)
+        earth_label = Text("Earth", color=WHITE).next_to(earth, DOWN, buff=0.2)
+
+        # Draw orbit
+        self.play(Create(orbit), FadeIn(orbit_label))
         self.wait(0.5)
-        circle_A_outline = Circle(radius=2, color=WHITE).shift(LEFT * 1)
-        circle_B_outline = Circle(radius=2, color=WHITE).shift(RIGHT * 1)
 
-        # Labels for Set A and Set B
-        label_A = Text("A").next_to(circle_A_outline, UL)
-        label_B = Text("B").next_to(circle_B_outline, UR)
+        # Draw Sun
+        self.play(FadeIn(sun), FadeIn(sun_label))
+        self.wait(0.5)
 
-        # Animate the drawing of the circles and the appearance of their labels
+        # Draw Earth and label
+        self.play(FadeIn(earth), FadeIn(earth_label))
+        self.wait(0.5)
+
+        # Animate Earth revolving once around orbit
         self.play(
-            Create(circle_A_outline),
-            Create(circle_B_outline),
-            FadeIn(label_A, label_B)
+            MoveAlongPath(earth, orbit, rate_func=linear, run_time=4),
+            MoveAlongPath(earth_label, orbit, rate_func=linear, run_time=4),
         )
         self.wait(1)
 
-        # Group the permanent Venn diagram elements (outlines + labels) for easy manipulation
-        venn_diagram_elements = VGroup(
-            circle_A_outline, circle_B_outline, label_A, label_B)
 
-        # Define the distinct regions of the Venn diagram using boolean operations on the circles.
-        # These are initially just conceptual polygons, not yet filled or added to the scene.
-        a_only_polygon = Difference(circle_A_outline, circle_B_outline)
-        b_only_polygon = Difference(circle_B_outline, circle_A_outline)
-        intersection_polygon = Intersection(circle_A_outline, circle_B_outline)
-
-        # --- Animation Sequence: Explaining Each Set Theory Concept ---
-
-        # 1. Explain Set A
-        # Highlight 'A' from the equation's 'A + B' part (index 4 in the Tex object) and its label
-        self.play(Indicate(equation_tex.submobjects[0][4]), Indicate(label_A))
-
-        # Create a VGroup to represent Set A's filled region (A_only part + intersection part)
-        fill_a_visual = VGroup(
-            a_only_polygon.copy().set_fill(COLOR_A_REGION, opacity=0.8),
-            intersection_polygon.copy().set_fill(COLOR_A_REGION, opacity=0.8)
+class Scene2_EarthAxialTilt(Scene):
+    def construct(self):
+        # Zoom in: Represent Earth larger
+        earth = Circle(radius=1.0, color=BLUE, fill_opacity=1.0)
+        axis = Line(
+            -UP * 1.2, DOWN * 1.2,
+            color=RED
+        ).rotate(AXIAL_TILT, about_point=ORIGIN)
+        tilt_arc = Arc(
+            start_angle=PI / 2 - AXIAL_TILT,
+            angle=AXIAL_TILT,
+            radius=1.0,
+            color=WHITE
         )
-        self.play(FadeIn(fill_a_visual))  # Animate the filling of Set A
+        angle_label = MathTex("23.5^\\circ", color=WHITE).next_to(
+            tilt_arc, UP, buff=0.1)
+        axis_label = Text("Earth's Axis", color=WHITE).next_to(
+            axis.get_end(), UP, buff=0.1)
 
-        # Add a textual caption for Set A
-        a_label_caption = Text("This is Set A").next_to(
-            venn_diagram_elements, DOWN).set_color(COLOR_A_REGION)
-        self.play(FadeIn(a_label_caption))
-        self.wait(1.5)
-        self.play(FadeOut(fill_a_visual), FadeOut(
-            a_label_caption))  # Clear Set A's filling
+        # Show Earth
+        self.play(FadeIn(earth))
+        self.wait(0.3)
 
-        # 2. Explain Set B
-        # Highlight 'B' from the equation's 'A + B' part (index 6 in the Tex object) and its label
-        self.play(Indicate(equation_tex.submobjects[0][6]), Indicate(label_B))
+        # Show axis tilted
+        self.play(Create(axis), FadeIn(axis_label))
+        self.wait(0.3)
 
-        # Create a VGroup to represent Set B's filled region
-        fill_b_visual = VGroup(
-            b_only_polygon.copy().set_fill(COLOR_B_REGION, opacity=0.8),
-            intersection_polygon.copy().set_fill(COLOR_B_REGION, opacity=0.8)
-        )
-        self.play(FadeIn(fill_b_visual))  # Animate the filling of Set B
+        # Show tilt arc and angle
+        self.play(Create(tilt_arc), Write(angle_label))
+        self.wait(0.5)
 
-        # Add a textual caption for Set B
-        b_label_caption = Text("This is Set B").next_to(
-            venn_diagram_elements, DOWN).set_color(COLOR_B_REGION)
-        self.play(FadeIn(b_label_caption))
-        self.wait(1.5)
-        self.play(FadeOut(fill_b_visual), FadeOut(
-            b_label_caption))  # Clear Set B's filling
+        # Rotate Earth on its axis (but keep tilt direction fixed in space)
+        self.play(Rotate(earth, angle=2 * PI, about_point=ORIGIN,
+                  run_time=3, rate_func=linear))
+        self.wait(0.5)
+        self.play(FadeOut(earth), FadeOut(axis), FadeOut(
+            axis_label), FadeOut(tilt_arc), FadeOut(angle_label))
 
-        # 3. Explain A ∩ B (Intersection)
-        # Highlight 'A \cap B' in the equation (indices 8 to 10 in the Tex object)
-        self.play(Indicate(equation_tex.submobjects[0][8:11]))
 
-        # Create and show the filled region for the Intersection
-        fill_intersection_visual = intersection_polygon.copy().set_fill(
-            COLOR_INTERSECTION_DOUBLE_COUNTED, opacity=0.8)
-        self.play(FadeIn(fill_intersection_visual))
+class Scene3_SummerSolstice(Scene):
+    def construct(self):
+        # Sun
+        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
+        sun_label = Text("The Sun", color=WHITE).to_corner(UL)        # Orbit
+        orbit = Circle(radius=EARTH_ORBIT_RADIUS, color=WHITE,
+                       stroke_opacity=0.5)
+        self.add(sun, sun_label, orbit)
 
-        # Add a textual caption for the Intersection
-        intersection_caption = Text("This is A ∩ B (Intersection)").next_to(
-            venn_diagram_elements, DOWN).set_color(COLOR_INTERSECTION_DOUBLE_COUNTED)
-        self.play(Write(intersection_caption))
-        self.wait(2)
-        self.play(FadeOut(fill_intersection_visual), FadeOut(
-            intersection_caption))  # Clear Intersection's filling
+        # Earth at top of orbit (June Solstice)
+        earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        earth.move_to(UP * EARTH_ORBIT_RADIUS)
+        # Tilt axis pointing toward Sun (north end tilted toward sun)
+        axis = Line(
+            earth.get_center() + UP * EARTH_RADIUS * 1.2,
+            earth.get_center() + DOWN * EARTH_RADIUS * 1.2,
+            color=RED
+        ).rotate(AXIAL_TILT, about_point=earth.get_center())
 
-        # 4. Explain A ∪ B (Union)
-        # Highlight 'A \cup B' in the equation (indices 0 to 2 in the Tex object)
-        self.play(Indicate(equation_tex.submobjects[0][0:3]))
+        # Sunlight rays from below (toward Earth)
+        sunlight = VGroup()
+        for i in range(-3, 4):
+            ray = Line(
+                start=DOWN * 6 + RIGHT * i * 0.5,
+                end=earth.get_center() + RIGHT * i * 0.1,
+                color=YELLOW_A,
+                stroke_width=2
+            )
+            sunlight.add(ray)
 
-        # Create and show the filled region for the Union
-        fill_union_visual = VGroup(
-            a_only_polygon.copy().set_fill(COLOR_UNION_FINAL, opacity=0.8),
-            b_only_polygon.copy().set_fill(COLOR_UNION_FINAL, opacity=0.8),
-            intersection_polygon.copy().set_fill(COLOR_UNION_FINAL, opacity=0.8)
-        )
-        self.play(FadeIn(fill_union_visual))
+        # Labels
+        nh_summer = Text("Northern Hemisphere: Summer",
+                         color=WHITE).to_edge(LEFT).shift(UP * 2)
+        sh_winter = Text("Southern Hemisphere: Winter",
+                         color=WHITE).to_edge(LEFT).shift(DOWN * 2)
+        solstice_label = Text("June Solstice", color=WHITE).to_edge(DOWN)
 
-        # Add a textual caption for the Union
-        union_caption = Text("This is A ∪ B (Union)").next_to(
-            venn_diagram_elements, DOWN).set_color(COLOR_UNION_FINAL)
-        self.play(Write(union_caption))
-        self.wait(2)
-        self.play(FadeOut(fill_union_visual), FadeOut(
-            union_caption))  # Clear Union's filling
-
-        # --- Animation Sequence: Demonstrating the Equation A ∪ B = A + B - A ∩ B ---
-
-        # Shrink equation slightly to make room for captions during demonstration
-        self.play(equation_tex.animate.scale(0.8).to_edge(UP))
-
-        # 5.1. Start with 'A' (part of A + B)
-        # Highlight 'A' in the equation to show focus
+        # Animate Earth moving into position (from right quadrant)
+        start_earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        start_earth.move_to(RIGHT * EARTH_ORBIT_RADIUS)
+        earth_label = Text("Earth", color=WHITE).next_to(
+            start_earth, UP, buff=0.1)
+        self.play(FadeIn(start_earth), FadeIn(earth_label))
+        self.wait(0.3)
         self.play(
-            Indicate(equation_tex.submobjects[0][4]),
-            equation_tex.submobjects[0][4].animate.set_color(YELLOW)
+            MoveAlongPath(start_earth, orbit, rate_func=linear, run_time=2),
+            MoveAlongPath(earth_label, orbit, rate_func=linear, run_time=2),
         )
+        self.remove(start_earth, earth_label)
 
-        # Show A's region filled. Store these filled mobjects for later transformations.
-        current_fill_a_only = a_only_polygon.copy().set_fill(COLOR_A_REGION, opacity=0.8)
-        current_fill_intersection_from_a = intersection_polygon.copy().set_fill(
-            COLOR_A_REGION, opacity=0.8)
-        self.play(FadeIn(current_fill_a_only), FadeIn(
-            current_fill_intersection_from_a))
+        # Add final Earth & axis
+        self.play(FadeIn(earth), Create(axis))
+        self.wait(0.3)
+
+        # Sunlight appears, highlighting northern hemisphere
+        self.play(Create(sunlight))
+        self.wait(0.3)
+
+        # Labels appear
+        self.play(FadeIn(nh_summer), FadeIn(sh_winter), Write(solstice_label))
         self.wait(1)
 
-        # 5.2. Add 'B' (part of A + B)
-        # Highlight '+ B' in the equation
+
+class Scene4_WinterSolstice(Scene):
+    def construct(self):
+        # Sun and orbit
+        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
+        sun_label = Text("The Sun", color=WHITE).to_corner(UL)
+        orbit = Circle(radius=EARTH_ORBIT_RADIUS,
+                       color=WHITE, stroke_opacity=0.5)
+        self.add(sun, sun_label, orbit)
+
+        # Earth at bottom (December Solstice)
+        earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        earth.move_to(DOWN * EARTH_ORBIT_RADIUS)
+        # Tilt axis pointing away (Northern tilted away)
+        axis = Line(
+            earth.get_center() + UP * EARTH_RADIUS * 1.2,
+            earth.get_center() + DOWN * EARTH_RADIUS * 1.2,
+            color=RED
+        ).rotate(-AXIAL_TILT, about_point=earth.get_center())
+
+        # Sunlight rays from above
+        sunlight = VGroup()
+        for i in range(-3, 4):
+            ray = Line(
+                start=UP * 6 + RIGHT * i * 0.5,
+                end=earth.get_center() + RIGHT * i * 0.1,
+                color=YELLOW_A,
+                stroke_width=2
+            )
+            sunlight.add(ray)
+
+        # Labels
+        nh_winter = Text("Northern Hemisphere: Winter",
+                         color=WHITE).to_edge(LEFT).shift(UP * 2)
+        sh_summer = Text("Southern Hemisphere: Summer",
+                         color=WHITE).to_edge(LEFT).shift(DOWN * 2)
+        solstice_label = Text("December Solstice", color=WHITE).to_edge(DOWN)
+
+        # Animate Earth moving from top to bottom
+        start_earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        start_earth.move_to(UP * EARTH_ORBIT_RADIUS)
+        earth_label = Text("Earth", color=WHITE).next_to(
+            start_earth, UP, buff=0.1)
+        self.play(FadeIn(start_earth), FadeIn(earth_label))
+        self.wait(0.3)
         self.play(
-            # Highlight '+' and 'B'
-            Indicate(equation_tex.submobjects[0][5:7]),
-            equation_tex.submobjects[0][5:7].animate.set_color(YELLOW)
+            MoveAlongPath(start_earth, orbit, rate_func=linear, run_time=2),
+            MoveAlongPath(earth_label, orbit, rate_func=linear, run_time=2),
+        )
+        self.remove(start_earth, earth_label)
+
+        # Show final Earth & axis
+        self.play(FadeIn(earth), Create(axis))
+        self.wait(0.3)
+
+        # Sunlight appears, highlighting southern hemisphere
+        self.play(Create(sunlight))
+        self.wait(0.3)
+
+        # Labels appear
+        self.play(FadeIn(nh_winter), FadeIn(sh_summer), Write(solstice_label))
+        self.wait(1)
+
+
+class Scene5_Equinoxes(Scene):
+    def construct(self):
+        # Sun and orbit
+        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
+        sun_label = Text("The Sun", color=WHITE).to_corner(UL)
+        orbit = Circle(radius=EARTH_ORBIT_RADIUS,
+                       color=WHITE, stroke_opacity=0.5)
+        self.add(sun, sun_label, orbit)
+
+        # Earth at March Equinox (left)
+        earth_march = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        earth_march.move_to(LEFT * EARTH_ORBIT_RADIUS)
+        axis_march = Line(
+            earth_march.get_center() + UP * EARTH_RADIUS * 1.2,
+            earth_march.get_center() + DOWN * EARTH_RADIUS * 1.2,
+            color=RED
+        ).rotate(AXIAL_TILT, about_point=earth_march.get_center())
+
+        # Earth at September Equinox (right)
+        earth_sept = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        earth_sept.move_to(RIGHT * EARTH_ORBIT_RADIUS)
+        axis_sept = Line(
+            earth_sept.get_center() + UP * EARTH_RADIUS * 1.2,
+            earth_sept.get_center() + DOWN * EARTH_RADIUS * 1.2,
+            color=RED
+        ).rotate(AXIAL_TILT, about_point=earth_sept.get_center())
+
+        # Sunlight rays hitting equally (horizontal)
+        sunlight_equal = VGroup()
+        for i in range(-3, 4):
+            ray = Line(
+                start=RIGHT * 6 + UP * i * 0.5,
+                end=earth_march.get_center() + RIGHT * 0.1 + UP * i * 0.1,
+                color=YELLOW_A,
+                stroke_width=2
+            )
+            sunlight_equal.add(ray)
+
+        # Labels
+        march_label = Text("March Equinox", color=WHITE).to_edge(
+            DOWN).shift(LEFT * 1.5)
+        sept_label = Text("September Equinox", color=WHITE).to_edge(
+            DOWN).shift(RIGHT * 1.5)
+
+        # Animate Earth moving from December position (down) to March (left)
+        start_earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        start_earth.move_to(DOWN * EARTH_ORBIT_RADIUS)
+        earth_label = Text("Earth", color=WHITE).next_to(
+            start_earth, DOWN, buff=0.1)
+        self.play(FadeIn(start_earth), FadeIn(earth_label))
+        self.wait(0.3)
+        self.play(
+            MoveAlongPath(start_earth, orbit, rate_func=linear, run_time=2.5),
+            MoveAlongPath(earth_label, orbit, rate_func=linear, run_time=2.5),
+        )
+        self.remove(start_earth, earth_label)
+
+        # Show March Earth, axis, sunlight, label
+        self.play(FadeIn(earth_march), Create(axis_march))
+        self.wait(0.3)
+        self.play(Create(sunlight_equal))
+        self.wait(0.3)
+        self.play(Write(march_label))
+        self.wait(1)
+
+        # Transform to September: move Earth & axis, adjust sunlight, label
+        self.play(FadeOut(earth_march), FadeOut(axis_march),
+                  FadeOut(sunlight_equal), FadeOut(march_label))
+
+        # Move from left to right
+        self.play(
+            MoveAlongPath(earth_sept, orbit, rate_func=linear, run_time=3),
+        )
+        self.play(FadeIn(earth_sept), Create(axis_sept))
+        self.wait(0.3)
+
+        # Sunlight equally from left side
+        sunlight_equal2 = VGroup()
+        for i in range(-3, 4):
+            ray = Line(
+                start=LEFT * 6 + UP * i * 0.5,
+                end=earth_sept.get_center() + LEFT * 0.1 + UP * i * 0.1,
+                color=YELLOW_A,
+                stroke_width=2
+            )
+            sunlight_equal2.add(ray)
+
+        self.play(Create(sunlight_equal2))
+        self.wait(0.3)
+        self.play(Write(sept_label))
+        self.wait(1)
+
+
+class Scene6_FullAnnualCycle(Scene):
+    def construct(self):
+        # Sun and orbit
+        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
+        sun_label = Text("The Sun", color=WHITE).to_corner(UL)
+        orbit = Circle(radius=EARTH_ORBIT_RADIUS,
+                       color=WHITE, stroke_opacity=0.5)
+        self.add(sun, sun_label, orbit)
+
+        # Earth with axis (initial at right)
+        earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
+        earth.move_to(RIGHT * EARTH_ORBIT_RADIUS)
+        axis = always_redraw(lambda: Line(
+            earth.get_center() + UP * EARTH_RADIUS * 1.2,
+            earth.get_center() + DOWN * EARTH_RADIUS * 1.2,
+            color=RED
+        ).rotate(AXIAL_TILT, about_point=earth.get_center()))
+
+        # Group Earth & axis so they move together
+        earth_and_axis = VGroup(earth, axis)
+
+        # Sunlight highlight: a semi-transparent circle sector representing illuminated half
+        illuminated = always_redraw(lambda: Dot(
+            fill_color=YELLOW_A,
+            radius=EARTH_RADIUS * 1.05,
+            fill_opacity=0.4
+        ).move_to(earth.get_center()))
+
+        # Season labels positions around orbit
+        summer_label = Text("Summer", color=WHITE).scale(
+            0.6).move_to(UP * (EARTH_ORBIT_RADIUS + 0.7))
+        autumn_label = Text("Fall", color=WHITE).scale(
+            0.6).move_to(LEFT * (EARTH_ORBIT_RADIUS + 0.7))
+        winter_label = Text("Winter", color=WHITE).scale(
+            0.6).move_to(DOWN * (EARTH_ORBIT_RADIUS + 0.7))
+        spring_label = Text("Spring", color=WHITE).scale(
+            0.6).move_to(RIGHT * (EARTH_ORBIT_RADIUS + 0.7))
+
+        # Add Earth & axis initially
+        # Animate full revolution with continuous tilt and sunlight emphasis
+        self.add(earth_and_axis)
+
+        def update_sunlight(mob, dt):
+            # Determine vector from Sun to Earth center
+            direction = normalize(earth.get_center() -
+                                  sun.get_center())
+            # Create half illumination by shifting the Dot slightly toward Sun
+            mob.move_to(earth.get_center() + direction * 0.01)
+
+        illuminated.add_updater(update_sunlight)
+        self.add(illuminated)
+
+        # Add season labels (fade in/out during animation)
+        self.play(
+            FadeIn(summer_label),
+            run_time=0.5
+        )
+        self.wait(0.5)
+        self.play(FadeOut(summer_label))
+
+        # Animation: Earth moves around orbit once (8 seconds)
+        self.play(
+            MoveAlongPath(earth_and_axis, orbit, rate_func=linear, run_time=8),
         )
 
-        # Show B's region filled.
-        # For the intersection, transform its color to indicate it's now double-counted
-        # (visually, it becomes a mix of A's and B's colors).
-        current_fill_b_only = b_only_polygon.copy().set_fill(COLOR_B_REGION, opacity=0.8)
-        target_fill_intersection_double = intersection_polygon.copy().set_fill(
-            COLOR_INTERSECTION_DOUBLE_COUNTED, opacity=0.8)
+        # Sequentially display season labels approximately at quarter points
+        self.play(FadeIn(autumn_label), run_time=0.5)
+        self.wait(1)
+        self.play(FadeOut(autumn_label))
 
-        self.play(
-            FadeIn(current_fill_b_only),
-            # Transforms the previous intersection fill
-            Transform(current_fill_intersection_from_a,
-                      target_fill_intersection_double)
-        )
+        self.play(FadeIn(winter_label), run_time=0.5)
+        self.wait(1)
+        self.play(FadeOut(winter_label))
 
-        # Group the currently visible filled regions to represent the A+B visual state
-        current_a_plus_b_regions = VGroup(
-            current_fill_a_only, current_fill_b_only, current_fill_intersection_from_a)
+        self.play(FadeIn(spring_label), run_time=0.5)
+        self.wait(1)
+        self.play(FadeOut(spring_label))
 
-        # Explain that the intersection is now double-counted
-        double_count_explanation = Text("A + B: Intersection (A ∩ B) is counted twice!").scale(
-            0.7).next_to(venn_diagram_elements, DOWN).set_color(RED)
-        self.play(Write(double_count_explanation), Flash(
-            current_fill_intersection_from_a.get_center()))
+        # Conclude with summary text
+        summary = Text("Earth's Revolution + Axial Tilt = Seasons",
+                       color=WHITE).scale(0.7)
+        summary.to_edge(DOWN)
+        self.play(Write(summary))
         self.wait(2)
-        self.play(FadeOut(double_count_explanation))
-
-        # Reset color of the A+B part in the equation
-        self.play(
-            equation_tex.submobjects[0][4].animate.set_color(WHITE),  # A
-            equation_tex.submobjects[0][5:7].animate.set_color(WHITE)  # +B
-        )
-
-        # 5.3. Subtract 'A ∩ B'
-        # Highlight '- A \cap B' in the equation
-        self.play(
-            Indicate(equation_tex.submobjects[0][7:]),  # From '-' to 'B'
-            equation_tex.submobjects[0][7:].animate.set_color(YELLOW)
-        )
-        self.wait(0.5)
-
-        # Explain the subtraction
-        subtract_explanation = Text("Subtract A ∩ B to correct double counting!").scale(
-            0.7).next_to(venn_diagram_elements, DOWN)
-        self.play(Write(subtract_explanation))
-
-        # Transform the intersection region's fill color back to a single-counted union color,
-        # effectively "removing" the second count.
-        target_fill_intersection_union_color = intersection_polygon.copy().set_fill(
-            COLOR_UNION_FINAL, opacity=0.8)
-
-        self.play(Transform(current_fill_intersection_from_a,
-                  target_fill_intersection_union_color))
-        self.wait(1.5)
-        self.play(FadeOut(subtract_explanation))
-        # Reset color of the -A intersect B part in the equation
-        self.play(equation_tex.submobjects[0][7:].animate.set_color(WHITE))
-
-        # 5.4. Result: 'A ∪ B'
-        # Highlight 'A \cup B' on the left side of the equation
-        self.play(
-            Indicate(equation_tex.submobjects[0][0:3]),
-            equation_tex.submobjects[0][0:3].animate.set_color(YELLOW)
-        )
-        self.wait(0.5)
-
-        # For visual consistency, transform the A_only and B_only parts to the union color
-        final_a_only_union_color = a_only_polygon.copy().set_fill(
-            COLOR_UNION_FINAL, opacity=0.8)
-        final_b_only_union_color = b_only_polygon.copy().set_fill(
-            COLOR_UNION_FINAL, opacity=0.8)
-
-        self.play(
-            Transform(current_fill_a_only, final_a_only_union_color),
-            Transform(current_fill_b_only, final_b_only_union_color)
-        )
-
-        # Display the final result text
-        final_result_text = Text("Result: A ∪ B").scale(0.7).next_to(
-            venn_diagram_elements, DOWN).set_color(GREEN)
-        self.play(Write(final_result_text), Flash(
-            current_a_plus_b_regions.get_center()))
-        self.wait(3)  # Long wait to emphasize the final state
-
-        # --- Cleanup ---
-        # Fade out all remaining mobjects from the scene
-        self.play(
-            FadeOut(current_a_plus_b_regions),  # All filled regions
-            FadeOut(venn_diagram_elements),     # Outlines and labels
-            FadeOut(equation_tex),
-            FadeOut(final_result_text)
-        )
-        self.wait(1)  # Final pause before scene ends

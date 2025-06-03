@@ -28,9 +28,8 @@ system_instruction = load_system_instruction()
 user_filter_prompt = load_user_filter_instruction()
 
 user_prompt = '''
-create me a 2d animation video explaning the equation 
-A∪B=A+B−A∩B
-using venn diagram and set theory concepts.
+create me a 2d animation video explaning the roation of earth around the sun,
+ explaning how it results in seasons.
 '''
 
 
