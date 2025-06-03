@@ -5,6 +5,11 @@ An intelligent AI framework that generates high-quality, educational 2D animatio
 # Working
 
 
+https://github.com/user-attachments/assets/91f67642-ff29-4a02-9929-4e39547e42f8
+
+
+
+
 ## 🚀 Quick Start
 
 ### Prerequisites
