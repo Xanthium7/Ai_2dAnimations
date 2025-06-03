@@ -1,17 +1,14 @@
+```python
 from manim import *
 
 # This function creates the core Venn diagram elements (circles and labels)
 # which are common across all scenes. It returns the outline circles, labels,
 # and initially transparent Mobjects representing the specific regions (A-only, B-only, Intersection).
-
-
 def create_venn_diagram_elements():
     # Define the two main circles for sets A and B
-    circle_a = Circle(radius=1.5, color=BLUE, stroke_opacity=1,
-                      fill_opacity=0).shift(LEFT * 1)
-    circle_b = Circle(radius=1.5, color=RED, stroke_opacity=1,
-                      fill_opacity=0).shift(RIGHT * 1)
-
+    circle_a = Circle(radius=1.5, color=BLUE, stroke_opacity=1, fill_opacity=0).shift(LEFT * 1)
+    circle_b = Circle(radius=1.5, color=RED, stroke_opacity=1, fill_opacity=0).shift(RIGHT * 1)
+    
     # Labels for the sets
     set_a_label = MathTex("A", color=BLUE).next_to(circle_a, LEFT, buff=0.2)
     set_b_label = MathTex("B", color=RED).next_to(circle_b, RIGHT, buff=0.2)
@@ -29,8 +26,6 @@ def create_venn_diagram_elements():
     return base_circles_outline, base_labels, region_a_only, region_b_only, region_intersection
 
 # --- Scene 1: Union (A ∪ B) ---
-
-
 class UnionScene(Scene):
     def construct(self):
         # Get the common Venn diagram elements
@@ -50,23 +45,19 @@ class UnionScene(Scene):
 
         # Define the text labels for the union operation
         union_text = MathTex("A \\cup B", color=GREEN).scale(1.5).to_edge(UP)
-        union_description = Text("All elements in A or B or both.").next_to(
-            union_text, DOWN, buff=0.5)
-
+        union_description = Text("All elements in A or B or both.").next_to(union_text, DOWN, buff=0.5)
+        
         # Animate the highlighting of the union region
         self.play(FadeIn(union_highlight))
         self.wait(0.5)
         # Animate the appearance of the union text and description
         self.play(Write(union_text), Write(union_description))
-        self.wait(2)  # Pause to allow time for reading/understanding
+        self.wait(2) # Pause to allow time for reading/understanding
 
         # Fade out all elements to prepare for the next scene
-        self.play(FadeOut(VGroup(union_highlight, union_text,
-                  union_description, base_circles_outline, base_labels)))
+        self.play(FadeOut(VGroup(union_highlight, union_text, union_description, base_circles_outline, base_labels)))
 
 # --- Scene 2: Intersection (A ∩ B) ---
-
-
 class IntersectionScene(Scene):
     def construct(self):
         # Get the common Venn diagram elements
@@ -79,32 +70,27 @@ class IntersectionScene(Scene):
         # Create copies of the non-overlapping regions and dim them
         a_only_faded = region_a_only.copy().set_fill(BLUE, opacity=0.1)
         b_only_faded = region_b_only.copy().set_fill(RED, opacity=0.1)
-        # Add them to the scene immediately as background
-        self.add(a_only_faded, b_only_faded)
+        self.add(a_only_faded, b_only_faded) # Add them to the scene immediately as background
 
         # Create the Mobject representing the intersection (A ∩ B), filled with PURPLE
         intersection_highlight = region_intersection.copy().set_fill(PURPLE, opacity=0.7)
 
         # Define the text labels for the intersection operation
-        intersection_text = MathTex(
-            "A \\cap B", color=PURPLE).scale(1.5).to_edge(UP)
-        intersection_description = Text("Elements common to both A and B.").next_to(
-            intersection_text, DOWN, buff=0.5)
+        intersection_text = MathTex("A \\cap B", color=PURPLE).scale(1.5).to_edge(UP)
+        intersection_description = Text("Elements common to both A and B.").next_to(intersection_text, DOWN, buff=0.5)
 
         # Animate the highlighting of the intersection region
         self.play(FadeIn(intersection_highlight))
         self.wait(0.5)
         # Animate the appearance of the intersection text and description
         self.play(Write(intersection_text), Write(intersection_description))
-        self.wait(2)  # Pause
+        self.wait(2) # Pause
 
         # Fade out all elements
         self.play(FadeOut(VGroup(intersection_highlight, intersection_text, intersection_description,
                                  a_only_faded, b_only_faded, base_circles_outline, base_labels)))
 
 # --- Scene 3: Difference (A - B) ---
-
-
 class DifferenceScene(Scene):
     def construct(self):
         # Get the common Venn diagram elements
@@ -117,24 +103,23 @@ class DifferenceScene(Scene):
         # Create copies of the regions not included in A-B and dim them
         b_only_faded = region_b_only.copy().set_fill(RED, opacity=0.1)
         intersection_faded = region_intersection.copy().set_fill(PURPLE, opacity=0.1)
-        # Add them to the scene immediately as background
-        self.add(b_only_faded, intersection_faded)
+        self.add(b_only_faded, intersection_faded) # Add them to the scene immediately as background
 
         # Create the Mobject representing the difference (A - B), filled with ORANGE
         difference_highlight = region_a_only.copy().set_fill(ORANGE, opacity=0.7)
 
         # Define the text labels for the difference operation
         difference_text = MathTex("A - B", color=ORANGE).scale(1.5).to_edge(UP)
-        difference_description = Text("Elements in A but not in B.").next_to(
-            difference_text, DOWN, buff=0.5)
+        difference_description = Text("Elements in A but not in B.").next_to(difference_text, DOWN, buff=0.5)
 
         # Animate the highlighting of the difference region
         self.play(FadeIn(difference_highlight))
         self.wait(0.5)
         # Animate the appearance of the difference text and description
         self.play(Write(difference_text), Write(difference_description))
-        self.wait(2)  # Pause
+        self.wait(2) # Pause
 
         # Fade out all elements
         self.play(FadeOut(VGroup(difference_highlight, difference_text, difference_description,
                                  b_only_faded, intersection_faded, base_circles_outline, base_labels)))
+```

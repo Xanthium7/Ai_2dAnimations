@@ -1,0 +1,8 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/DifferenceScene/3977891868_1198933177_223132457.mp4'
+file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/DifferenceScene/2852726489_3394500337_670263623.mp4'
+file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/DifferenceScene/2852726489_1633059804_227614309.mp4'
+file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/DifferenceScene/2852726489_3394500337_1406410206.mp4'
+file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/DifferenceScene/2852726489_3255609517_2320749280.mp4'
+file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/DifferenceScene/2852726489_2844360058_3667883581.mp4'
+file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/DifferenceScene/2852726489_799820973_825333220.mp4'
