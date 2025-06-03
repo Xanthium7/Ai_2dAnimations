@@ -1,8 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/UnionScene/3977891868_2600509240_223132457.mp4'
-file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/UnionScene/2852726489_3394500337_3860115894.mp4'
-file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/UnionScene/2852726489_4125468520_86154271.mp4'
-file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/UnionScene/2852726489_3394500337_1838850522.mp4'
-file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/UnionScene/2852726489_2672735025_3921482069.mp4'
-file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/UnionScene/2852726489_2844360058_3005362779.mp4'
-file 'file:C:/Users/ASUS/OneDrive/Desktop/Python_projects/ai_2danimations/manimations/media/videos/example/1080p60/partial_movie_files/UnionScene/2852726489_2561625030_825333220.mp4'
