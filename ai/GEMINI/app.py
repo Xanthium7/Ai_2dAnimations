@@ -28,8 +28,8 @@ system_instruction = load_system_instruction()
 user_filter_prompt = load_user_filter_instruction()
 
 user_prompt = '''
-create me a 2d animation video explaning the roation of earth around the sun,
- explaning how it results in seasons.
+create me animation video explaning the creation and fucntioning of neural networks.
+
 '''
 
 

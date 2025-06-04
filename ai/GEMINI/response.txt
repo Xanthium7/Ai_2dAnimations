@@ -1,163 +1,276 @@
+I'd be glad to help you create an animation explaining neural networks using Manim! This will be a single, comprehensive animation that covers the basic concepts.
+
+Here's the plan for the animation:
+1.  **Introduction**: Briefly introduce what a neural network is.
+2.  **The Neuron**: Explain the fundamental building block (input, weights, bias, activation function, output).
+3.  **Network Architecture**: Show how neurons connect to form layers (input, hidden, output).
+4.  **Forward Propagation**: Animate data flowing through the network to generate a prediction.
+5.  **Learning (Backpropagation simplified)**: Explain how the network learns by calculating error and adjusting weights/biases.
+6.  **Functioning/Conclusion**: Summarize the purpose and broad applications.
+
+The code will be structured into a single `Scene` class, with clear comments separating each phase.
+
 ```python
 from manim import *
 
-class EarthSeasons(Scene):
+class NeuralNetworkExplanation(Scene):
     def construct(self):
-        # --- Constants ---
-        SUN_RADIUS = 1.0
-        EARTH_RADIUS = 0.3
-        ORBIT_RADIUS_X = 5.0  # Semi-major axis for elliptical orbit
-        ORBIT_RADIUS_Y = 3.5  # Semi-minor axis for elliptical orbit
-        AXIAL_TILT_DEGREES = 23.5 # Earth's axial tilt in degrees
+        # 1. Introduction to Neural Networks
+        title = Text("Understanding Neural Networks", font_size=50).to_edge(UP)
+        intro_text = Text(
+            "Inspired by the human brain, neural networks learn from data.",
+            font_size=32
+        ).next_to(title, DOWN, buff=0.8)
 
-        # --- Colors ---
-        SUN_COLOR = YELLOW
-        EARTH_COLOR = BLUE_D
-        AXIS_COLOR = WHITE
-        ORBIT_COLOR = GRAY_A
-        RAY_COLOR = YELLOW_A
-        TEXT_COLOR = WHITE
-        HIGHLIGHT_COLOR = RED_C
+        self.play(Write(title))
+        self.play(Write(intro_text))
+        self.wait(1.5)
+        self.play(FadeOut(intro_text))
 
-        # --- Mobjects ---
-        # Sun
-        sun = Circle(radius=SUN_RADIUS, color=SUN_COLOR, fill_opacity=1).move_to(ORIGIN)
-        sun_label = Text("Sun", font_size=32, color=TEXT_COLOR).next_to(sun, DOWN)
+        # 2. The Basic Unit: The Neuron
+        neuron_title = Text("The Neuron: A Basic Unit", font_size=40).to_edge(UP)
+        self.play(Transform(title, neuron_title))
 
-        # Earth and its axis
-        earth_circle = Circle(radius=EARTH_RADIUS, color=EARTH_COLOR, fill_opacity=1)
-        # Earth's axis: a line passing through Earth's center, tilted
-        axis_length = EARTH_RADIUS * 2.5 # Make axis slightly longer than Earth's diameter
-        earth_axis = Line(ORIGIN + axis_length/2 * DOWN, ORIGIN + axis_length/2 * UP, color=AXIS_COLOR)
-        # Rotate axis by -23.5 degrees (clockwise from vertical 'UP') to represent the tilt
-        # This rotation is relative to its own center, and then the VGroup will move it
-        # while preserving its orientation in the scene's coordinate system.
-        earth_axis.rotate(DEGREES(-AXIAL_TILT_DEGREES), about_point=ORIGIN) 
-
-        # Group Earth circle and axis. This group will move together as Earth orbits.
-        earth = VGroup(earth_circle, earth_axis)
-
-        # Orbital path: an ellipse centered at the Sun
-        orbital_path = Ellipse(width=ORBIT_RADIUS_X * 2, height=ORBIT_RADIUS_Y * 2, color=ORBIT_COLOR)
-
-        # --- Information and Season Labels ---
-        title = Text("Earth's Seasons", font_size=48, color=TEXT_COLOR).to_edge(UP)
-        initial_info = Text("Earth orbits the Sun on an elliptical path.", font_size=28, color=TEXT_COLOR).next_to(title, DOWN)
-        tilt_info = Text("Earth's axis is tilted by 23.5° relative to its orbit.", font_size=28, color=TEXT_COLOR).next_to(initial_info, DOWN)
+        neuron_circle = Circle(radius=0.8, color=BLUE_C, fill_opacity=0.7).move_to(ORIGIN)
         
-        # Season display
-        season_text_label = Text("Current Season (N.H.):", font_size=32, color=TEXT_COLOR).to_corner(UL).shift(0.5*DOWN)
-        current_season_text = Text("", font_size=32, color=HIGHLIGHT_COLOR).next_to(season_text_label, RIGHT)
-        explanation_text = Text("", font_size=28, color=TEXT_COLOR).to_corner(DR).shift(0.5*UP)
-
-        # --- Initial Scene Setup ---
-        self.play(FadeIn(title))
-        self.wait(0.5)
-        self.play(Create(sun), FadeIn(sun_label))
-        self.play(Create(orbital_path))
-        self.play(FadeIn(initial_info))
-        self.wait(2)
-
-        # Set initial position of Earth for Vernal Equinox (angle 0, right side of ellipse)
-        initial_angle = 0 
-        earth.move_to(orbital_path.point_at_angle(initial_angle))
-
-        self.play(FadeIn(earth), FadeOut(initial_info))
-        self.play(FadeIn(tilt_info))
-        self.wait(2)
-        self.play(FadeOut(tilt_info))
-
-        # --- Helper Function for Light Rays ---
-        # Creates parallel lines representing sunlight originating from a distant source (left of scene)
-        def create_light_rays(earth_mobject, num_rays=7):
-            rays = VGroup()
-            # Define the x-coordinate for the start/end of rays (far left/right)
-            source_x = sun.get_center()[0] - ORBIT_RADIUS_X * 2.5 
-            target_x = sun.get_center()[0] + ORBIT_RADIUS_X * 2.5
-
-            # Determine the vertical extent where rays should pass through Earth
-            earth_top_y = earth_mobject.get_center()[1] + EARTH_RADIUS
-            earth_bottom_y = earth_mobject.get_center()[1] - EARTH_RADIUS
-
-            # Distribute rays evenly vertically across Earth's approximate diameter
-            y_coords = np.linspace(earth_bottom_y, earth_top_y, num_rays)
-            
-            for y in y_coords:
-                ray = Line(np.array([source_x, y, 0]), np.array([target_x, y, 0]), color=RAY_COLOR, stroke_width=2)
-                rays.add(ray)
-            return rays
-
-        # --- Seasonal Points (ordered counter-clockwise for animation flow) ---
-        # Angles are in radians, measured counter-clockwise from the positive X-axis
-        # 0        -> Vernal Equinox (N.H.) - Earth at the right
-        # PI/2     -> Summer Solstice (N.H.) - Earth at the top
-        # PI       -> Autumnal Equinox (N.H.) - Earth at the left
-        # 3*PI/2   -> Winter Solstice (N.H.) - Earth at the bottom
+        # Input part
+        input_line = Line(LEFT * 3, neuron_circle.get_left(), color=GRAY_A)
+        input_text = Text("Input (x)", font_size=28).next_to(input_line, LEFT)
         
-        seasonal_points_ccw = [
-            {"angle": 0,        "season_nh": "Vernal Equinox", "explanation": "Neither hemisphere is tilted towards/away from the Sun, resulting in equal day and night lengths globally."},
-            {"angle": PI/2,     "season_nh": "Summer Solstice", "explanation": "Northern Hemisphere is tilted towards the Sun, receiving more direct sunlight and having longer days."},
-            {"angle": PI,       "season_nh": "Autumnal Equinox", "explanation": "Neither hemisphere is tilted towards/away from the Sun, resulting in equal day and night lengths globally."},
-            {"angle": 3*PI/2,   "season_nh": "Winter Solstice", "explanation": "Northern Hemisphere is tilted away from the Sun, receiving less direct sunlight and having shorter days."}
-        ]
+        # Weight
+        weight_text = MathTex(r"\times W", font_size=36).next_to(input_line, UP + RIGHT * 0.5, buff=0.2)
         
-        # --- Seasonal Explanation Animation ---
-        self.play(FadeIn(season_text_label, current_season_text, explanation_text))
+        # Bias
+        bias_text = MathTex(r"+ B", font_size=36).next_to(neuron_circle.get_top(), UP * 0.5)
 
-        # Use a ValueTracker to control Earth's angular position along the orbit
-        # This allows for precise control of movement and pausing.
-        orbit_angle_tracker = ValueTracker(initial_angle)
+        # Activation Function
+        activation_func_text = MathTex(r"f(z)", font_size=36).move_to(neuron_circle.get_center())
+        activation_label = Text("Activation Function", font_size=24).next_to(activation_func_text, DOWN, buff=0.1)
 
-        # Add an updater to Earth: its position is continuously updated based on the tracker's value.
-        earth.add_updater(lambda m: m.move_to(orbital_path.point_at_angle(orbit_angle_tracker.get_value())))
+        # Output part
+        output_line = Line(neuron_circle.get_right(), RIGHT * 3, color=GRAY_A)
+        output_text = Text("Output (y)", font_size=28).next_to(output_line, RIGHT)
 
-        # Show initial Vernal Equinox state
-        self.play(
-            current_season_text.animate.set_text(seasonal_points_ccw[0]["season_nh"]),
-            explanation_text.animate.set_text(seasonal_points_ccw[0]["explanation"]),
-            run_time=1
-        )
-        rays_initial = create_light_rays(earth_circle)
-        self.add(rays_initial) # Use add for instant appearance and remove later
-        self.wait(3)
-        self.remove(rays_initial)
+        neuron_elements = VGroup(input_line, input_text, weight_text, 
+                                 neuron_circle, bias_text, activation_func_text, activation_label,
+                                 output_line, output_text)
 
-        # Duration for Earth to move through one quarter of its orbit
-        quarter_orbit_duration = 5 # seconds
-
-        # Loop through each season to explain the change
-        for i in range(len(seasonal_points_ccw)):
-            next_index = (i + 1) % len(seasonal_points_ccw) # Cycle back to 0 after last point
-            next_season_data = seasonal_points_ccw[next_index]
-            
-            # Animate Earth's movement to the next seasonal point
-            # If it's the last segment (3*PI/2 to 0), animate to 2*PI to complete the circle visually
-            target_angle_for_animation = next_season_data["angle"] if next_season_data["angle"] != 0 else 2*PI
-            
-            self.play(
-                orbit_angle_tracker.animate.set_value(target_angle_for_animation),
-                run_time=quarter_orbit_duration,
-                rate_func=linear # Constant speed orbit
-            )
-            
-            # Update season texts to reflect the current season
-            self.play(
-                current_season_text.animate.set_text(next_season_data["season_nh"]),
-                explanation_text.animate.set_text(next_season_data["explanation"]),
-                run_time=0.5
-            )
-            
-            # Show light rays for the current season's orientation
-            current_rays = create_light_rays(earth_circle)
-            self.add(current_rays)
-            self.wait(3) # Pause to allow user to read explanation and observe
-            self.remove(current_rays) # Remove rays before next segment
-
-        # --- Final Cleanup ---
-        # Remove the updater from Earth before fading it out
-        earth.remove_updater(earth.updaters[0]) 
-
-        self.play(FadeOut(season_text_label, current_season_text, explanation_text))
-        self.play(FadeOut(earth, sun, sun_label, orbital_path, title))
+        self.play(Create(input_line), Write(input_text))
+        self.play(GrowFromCenter(neuron_circle))
+        self.play(Write(weight_text), Write(bias_text))
+        self.play(Write(activation_func_text), Write(activation_label))
+        self.play(Create(output_line), Write(output_text))
         self.wait(1)
+
+        # Animate data flow through a single neuron
+        data_dot = Dot(color=RED_D, radius=0.15).move_to(input_text.get_left())
+        value_x = MathTex("x", font_size=30).next_to(data_dot, UP)
+        value_z = MathTex("z = wx+b", font_size=30).next_to(neuron_circle, UP)
+        value_y = MathTex("y = f(z)", font_size=30).next_to(output_text, UP)
+
+        self.play(FadeIn(data_dot, shift=LEFT))
+        self.play(Write(value_x))
+        self.play(
+            data_dot.animate.move_to(neuron_circle.get_center()),
+            FadeOut(value_x),
+            Write(value_z)
+        )
+        self.wait(0.5)
+        self.play(
+            data_dot.animate.move_to(output_text.get_right()),
+            FadeOut(value_z),
+            Write(value_y)
+        )
+        self.wait(1)
+        
+        self.play(FadeOut(data_dot, value_y, neuron_elements))
+        self.wait(0.5)
+
+
+        # 3. Neural Network Architecture: Layers
+        network_title = Text("Neural Network Architecture", font_size=40).to_edge(UP)
+        self.play(Transform(title, network_title))
+
+        # Create Layers
+        input_neurons = VGroup(*[Circle(radius=0.3, color=BLUE_C, fill_opacity=0.7) for _ in range(3)])
+        input_neurons.arrange(DOWN, buff=0.7).shift(LEFT * 4)
+
+        hidden_neurons = VGroup(*[Circle(radius=0.3, color=YELLOW_C, fill_opacity=0.7) for _ in range(4)])
+        hidden_neurons.arrange(DOWN, buff=0.7)
+
+        output_neurons = VGroup(*[Circle(radius=0.3, color=GREEN_C, fill_opacity=0.7) for _ in range(2)])
+        output_neurons.arrange(DOWN, buff=0.7).shift(RIGHT * 4)
+
+        # Labels for Layers
+        input_label = Text("Input Layer", font_size=28).next_to(input_neurons, DOWN, buff=0.7)
+        hidden_label = Text("Hidden Layer", font_size=28).next_to(hidden_neurons, DOWN, buff=0.7)
+        output_label = Text("Output Layer", font_size=28).next_to(output_neurons, DOWN, buff=0.7)
+
+        self.play(LaggedStart(*[GrowFromCenter(n) for n in input_neurons], lag_ratio=0.2), Write(input_label))
+        self.play(LaggedStart(*[GrowFromCenter(n) for n in hidden_neurons], lag_ratio=0.2), Write(hidden_label))
+        self.play(LaggedStart(*[GrowFromCenter(n) for n in output_neurons], lag_ratio=0.2), Write(output_label))
+        self.wait(0.5)
+
+        # Draw Connections
+        connections = VGroup()
+        for in_neuron in input_neurons:
+            for hid_neuron in hidden_neurons:
+                line = Line(in_neuron.get_right(), hid_neuron.get_left(), color=GRAY_A, stroke_width=2)
+                connections.add(line)
+        for hid_neuron in hidden_neurons:
+            for out_neuron in output_neurons:
+                line = Line(hid_neuron.get_right(), out_neuron.get_left(), color=GRAY_A, stroke_width=2)
+                connections.add(line)
+        
+        self.play(Create(connections, lag_ratio=0.01))
+        self.wait(1)
+
+        # Explanation of Weights and Biases
+        weight_exp = Text("Each connection has a 'Weight'", font_size=28).to_edge(DL).shift(UP * 0.5)
+        bias_exp = Text("Each neuron has a 'Bias'", font_size=28).next_to(weight_exp, DOWN, aligned_edge=LEFT)
+        self.play(Write(weight_exp))
+        self.play(Flash(connections[len(connections)//2], color=YELLOW))
+        self.wait(0.5)
+        self.play(Write(bias_exp))
+        self.play(Indicate(hidden_neurons[len(hidden_neurons)//2], color=YELLOW))
+        self.wait(1.5)
+        self.play(FadeOut(weight_exp, bias_exp))
+
+
+        # 4. Forward Propagation
+        forward_title = Text("Forward Propagation", font_size=40).to_edge(UP)
+        self.play(Transform(title, forward_title))
+
+        prop_text = Text(
+            "Information flows from input to output, layer by layer.",
+            font_size=28
+        ).to_edge(DL)
+        self.play(Write(prop_text))
+        self.wait(0.5)
+
+        # Animate data flow
+        data_dots_input = VGroup(*[Dot(color=RED_D, radius=0.1) for _ in input_neurons])
+        for i, neuron in enumerate(input_neurons):
+            data_dots_input[i].move_to(neuron.get_center())
+            
+        input_values_text = VGroup()
+        for i, neuron in enumerate(input_neurons):
+            val = MathTex(f"X_{i+1}", font_size=24).next_to(neuron, LEFT, buff=0.2)
+            input_values_text.add(val)
+        self.play(FadeIn(input_values_text, shift=LEFT))
+        self.wait(0.5)
+
+        self.play(
+            LaggedStart(*[
+                Succession(
+                    FadeIn(data_dots_input[i].copy()), # Use copy to keep original for next layer
+                    ApplyMethod(data_dots_input[i].copy().move_to, hid_neuron.get_center(), run_time=0.5, path_arc=PI/4)
+                ) for i, input_n in enumerate(input_neurons) for hid_neuron in hidden_neurons
+            ], lag_ratio=0.01)
+        )
+        self.wait(0.5) # Wait for dots to arrive at hidden layer
+
+        data_dots_hidden = VGroup(*[Dot(color=RED_D, radius=0.1) for _ in hidden_neurons])
+        for i, neuron in enumerate(hidden_neurons):
+            data_dots_hidden[i].move_to(neuron.get_center())
+
+        self.play(
+            LaggedStart(*[
+                Succession(
+                    FadeIn(data_dots_hidden[i].copy()),
+                    ApplyMethod(data_dots_hidden[i].copy().move_to, out_neuron.get_center(), run_time=0.5, path_arc=-PI/4)
+                ) for i, hidden_n in enumerate(hidden_neurons) for out_neuron in output_neurons
+            ], lag_ratio=0.01)
+        )
+        self.wait(0.5) # Wait for dots to arrive at output layer
+
+        output_values_text = VGroup()
+        for i, neuron in enumerate(output_neurons):
+            val = MathTex(f"Y_{i+1}", font_size=24).next_to(neuron, RIGHT, buff=0.2)
+            output_values_text.add(val)
+        self.play(Write(output_values_text))
+        self.wait(1.5)
+
+        self.play(FadeOut(prop_text, input_values_text, output_values_text)) # Also remove dots
+        self.wait(0.5)
+
+
+        # 5. Learning: Backpropagation (Simplified)
+        learning_title = Text("Learning: Backpropagation", font_size=40).to_edge(UP)
+        self.play(Transform(title, learning_title))
+
+        predicted_output_label = Text("Predicted Output", font_size=28).next_to(output_neurons, RIGHT, buff=1.0)
+        target_output_label = Text("Target Output", font_size=28).next_to(predicted_output_label, DOWN, buff=0.7, aligned_edge=LEFT)
+        error_label = Text("Error = Predicted - Target", font_size=28).next_to(target_output_label, DOWN, buff=0.7, aligned_edge=LEFT)
+
+        self.play(Write(predicted_output_label))
+        self.wait(0.5)
+        self.play(Write(target_output_label))
+        self.wait(0.5)
+        self.play(Write(error_label))
+        self.wait(1)
+
+        error_flow_line = Line(error_label.get_left(), error_label.get_left() + LEFT * 0.5, color=RED).add_tip()
+        error_flow_line_return = Line(error_label.get_top(), hidden_neurons.get_right(), color=RED).add_tip()
+        error_flow_text = Text("Error propagated backward", font_size=28).next_to(error_flow_line, DOWN)
+        
+        self.play(Create(error_flow_line), FadeIn(error_flow_text))
+        self.play(error_flow_line.animate.put_start_and_end_on(error_label.get_center(), output_neurons.get_center()))
+        self.wait(0.5)
+
+        # Animate backward flow and weight/bias adjustment
+        adjust_text = Text("Weights & Biases are adjusted!", font_size=32).move_to(ORIGIN)
+        self.play(
+            FadeOut(error_flow_line, error_flow_text),
+            FadeIn(adjust_text)
+        )
+        self.play(
+            Indicate(connections, scale_factor=1.1, color=YELLOW),
+            Indicate(hidden_neurons, scale_factor=1.1, color=YELLOW)
+        )
+        self.wait(1)
+
+        iteration_text = Text(
+            "This process repeats thousands of times to minimize error.",
+            font_size=30
+        ).next_to(adjust_text, DOWN, buff=0.7)
+        self.play(Write(iteration_text))
+        self.wait(2)
+
+        self.play(FadeOut(predicted_output_label, target_output_label, error_label, adjust_text, iteration_text))
+        self.wait(0.5)
+
+
+        # 6. Conclusion / Functioning
+        conclusion_title = Text("Neural Networks In Action", font_size=40).to_edge(UP)
+        self.play(Transform(title, conclusion_title))
+
+        application_text = Text(
+            "Neural Networks excel at tasks like:",
+            font_size=32
+        ).to_edge(LEFT).shift(UP * 1.5)
+        
+        app1 = Text("• Image Recognition (e.g., identifying objects)", font_size=28).next_to(application_text, DOWN, buff=0.5, aligned_edge=LEFT)
+        app2 = Text("• Natural Language Processing (e.g., translation)", font_size=28).next_to(app1, DOWN, buff=0.3, aligned_edge=LEFT)
+        app3 = Text("• Predictive Analytics (e.g., stock prices)", font_size=28).next_to(app2, DOWN, buff=0.3, aligned_edge=LEFT)
+
+        self.play(Write(application_text))
+        self.play(Write(app1))
+        self.play(Write(app2))
+        self.play(Write(app3))
+        self.wait(2.5)
+
+        final_message = Text(
+            "By learning complex patterns, Neural Networks drive modern AI.",
+            font_size=36, color=YELLOW
+        ).move_to(ORIGIN).shift(DOWN * 2)
+
+        self.play(FadeOut(application_text, app1, app2, app3))
+        self.play(Write(final_message))
+        self.wait(2)
+
+        self.play(FadeOut(title, final_message, input_neurons, hidden_neurons, output_neurons, connections, 
+                           input_label, hidden_label, output_label))
+        self.wait(1)
+
 ```

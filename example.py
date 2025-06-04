@@ -1,386 +1,302 @@
 from manim import *
 
-# Constants
-EARTH_ORBIT_RADIUS = 3.5
-EARTH_RADIUS = 0.4
-AXIAL_TILT = 23.5 * DEGREES  # 23.5 degrees in radians
 
-
-class Scene1_IntroductionToOrbital(Scene):
+class NeuralNetworkExplanation(Scene):
     def construct(self):
-        # Sun at center
-        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
-        # Earth's orbital path (Ellipse approximated as Circle for simplicity)
-        sun_label = Text("The Sun", color=WHITE).next_to(sun, DOWN, buff=0.3)
-        orbit = Circle(radius=EARTH_ORBIT_RADIUS, color=WHITE,
-                       stroke_opacity=0.5)
-        orbit_label = Text("Earth's Orbit", color=WHITE).next_to(
-            orbit, UP, buff=0.3)
+        # 1. Introduction to Neural Networks
+        title = Text("Understanding Neural Networks", font_size=50).to_edge(UP)
+        intro_text = Text(
+            "Inspired by the human brain, neural networks learn from data.",
+            font_size=32
+        ).next_to(title, DOWN, buff=0.8)
 
-        # Earth at starting point (to the right of Sun)
-        earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        earth.shift(RIGHT * EARTH_ORBIT_RADIUS)
-        earth_label = Text("Earth", color=WHITE).next_to(earth, DOWN, buff=0.2)
+        self.play(Write(title))
+        self.play(Write(intro_text))
+        self.wait(1.5)
+        self.play(FadeOut(intro_text))
 
-        # Draw orbit
-        self.play(Create(orbit), FadeIn(orbit_label))
-        self.wait(0.5)
+        # 2. The Basic Unit: The Neuron
+        neuron_title = Text("The Neuron: A Basic Unit",
+                            font_size=40).to_edge(UP)
+        self.play(Transform(title, neuron_title))
 
-        # Draw Sun
-        self.play(FadeIn(sun), FadeIn(sun_label))
-        self.wait(0.5)
+        neuron_circle = Circle(radius=0.8, color=BLUE_C,
+                               fill_opacity=0.7).move_to(ORIGIN)
 
-        # Draw Earth and label
-        self.play(FadeIn(earth), FadeIn(earth_label))
-        self.wait(0.5)
+        # Input part
+        input_line = Line(LEFT * 3, neuron_circle.get_left(), color=GRAY_A)
+        input_text = Text("Input (x)", font_size=28).next_to(input_line, LEFT)
 
-        # Animate Earth revolving once around orbit
-        self.play(
-            MoveAlongPath(earth, orbit, rate_func=linear, run_time=4),
-            MoveAlongPath(earth_label, orbit, rate_func=linear, run_time=4),
-        )
+        # Weight
+        weight_text = MathTex(r"\times W", font_size=36).next_to(
+            input_line, UP + RIGHT * 0.5, buff=0.2)
+
+        # Bias
+        bias_text = MathTex(
+            r"+ B", font_size=36).next_to(neuron_circle.get_top(), UP * 0.5)
+
+        # Activation Function
+        activation_func_text = MathTex(
+            r"f(z)", font_size=36).move_to(neuron_circle.get_center())
+        activation_label = Text("Activation Function", font_size=24).next_to(
+            activation_func_text, DOWN, buff=0.1)
+
+        # Output part
+        output_line = Line(neuron_circle.get_right(), RIGHT * 3, color=GRAY_A)
+        output_text = Text("Output (y)", font_size=28).next_to(
+            output_line, RIGHT)
+
+        neuron_elements = VGroup(input_line, input_text, weight_text,
+                                 neuron_circle, bias_text, activation_func_text, activation_label,
+                                 output_line, output_text)
+
+        self.play(Create(input_line), Write(input_text))
+        self.play(GrowFromCenter(neuron_circle))
+        self.play(Write(weight_text), Write(bias_text))
+        self.play(Write(activation_func_text), Write(activation_label))
+        self.play(Create(output_line), Write(output_text))
         self.wait(1)
 
+        # Animate data flow through a single neuron
+        data_dot = Dot(color=RED_D, radius=0.15).move_to(input_text.get_left())
+        value_x = MathTex("x", font_size=30).next_to(data_dot, UP)
+        value_z = MathTex("z = wx+b", font_size=30).next_to(neuron_circle, UP)
+        value_y = MathTex("y = f(z)", font_size=30).next_to(output_text, UP)
 
-class Scene2_EarthAxialTilt(Scene):
-    def construct(self):
-        # Zoom in: Represent Earth larger
-        earth = Circle(radius=1.0, color=BLUE, fill_opacity=1.0)
-        axis = Line(
-            -UP * 1.2, DOWN * 1.2,
-            color=RED
-        ).rotate(AXIAL_TILT, about_point=ORIGIN)
-        tilt_arc = Arc(
-            start_angle=PI / 2 - AXIAL_TILT,
-            angle=AXIAL_TILT,
-            radius=1.0,
-            color=WHITE
-        )
-        angle_label = MathTex("23.5^\\circ", color=WHITE).next_to(
-            tilt_arc, UP, buff=0.1)
-        axis_label = Text("Earth's Axis", color=WHITE).next_to(
-            axis.get_end(), UP, buff=0.1)
-
-        # Show Earth
-        self.play(FadeIn(earth))
-        self.wait(0.3)
-
-        # Show axis tilted
-        self.play(Create(axis), FadeIn(axis_label))
-        self.wait(0.3)
-
-        # Show tilt arc and angle
-        self.play(Create(tilt_arc), Write(angle_label))
-        self.wait(0.5)
-
-        # Rotate Earth on its axis (but keep tilt direction fixed in space)
-        self.play(Rotate(earth, angle=2 * PI, about_point=ORIGIN,
-                  run_time=3, rate_func=linear))
-        self.wait(0.5)
-        self.play(FadeOut(earth), FadeOut(axis), FadeOut(
-            axis_label), FadeOut(tilt_arc), FadeOut(angle_label))
-
-
-class Scene3_SummerSolstice(Scene):
-    def construct(self):
-        # Sun
-        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
-        sun_label = Text("The Sun", color=WHITE).to_corner(UL)        # Orbit
-        orbit = Circle(radius=EARTH_ORBIT_RADIUS, color=WHITE,
-                       stroke_opacity=0.5)
-        self.add(sun, sun_label, orbit)
-
-        # Earth at top of orbit (June Solstice)
-        earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        earth.move_to(UP * EARTH_ORBIT_RADIUS)
-        # Tilt axis pointing toward Sun (north end tilted toward sun)
-        axis = Line(
-            earth.get_center() + UP * EARTH_RADIUS * 1.2,
-            earth.get_center() + DOWN * EARTH_RADIUS * 1.2,
-            color=RED
-        ).rotate(AXIAL_TILT, about_point=earth.get_center())
-
-        # Sunlight rays from below (toward Earth)
-        sunlight = VGroup()
-        for i in range(-3, 4):
-            ray = Line(
-                start=DOWN * 6 + RIGHT * i * 0.5,
-                end=earth.get_center() + RIGHT * i * 0.1,
-                color=YELLOW_A,
-                stroke_width=2
-            )
-            sunlight.add(ray)
-
-        # Labels
-        nh_summer = Text("Northern Hemisphere: Summer",
-                         color=WHITE).to_edge(LEFT).shift(UP * 2)
-        sh_winter = Text("Southern Hemisphere: Winter",
-                         color=WHITE).to_edge(LEFT).shift(DOWN * 2)
-        solstice_label = Text("June Solstice", color=WHITE).to_edge(DOWN)
-
-        # Animate Earth moving into position (from right quadrant)
-        start_earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        start_earth.move_to(RIGHT * EARTH_ORBIT_RADIUS)
-        earth_label = Text("Earth", color=WHITE).next_to(
-            start_earth, UP, buff=0.1)
-        self.play(FadeIn(start_earth), FadeIn(earth_label))
-        self.wait(0.3)
+        self.play(FadeIn(data_dot, shift=LEFT))
+        self.play(Write(value_x))
         self.play(
-            MoveAlongPath(start_earth, orbit, rate_func=linear, run_time=2),
-            MoveAlongPath(earth_label, orbit, rate_func=linear, run_time=2),
-        )
-        self.remove(start_earth, earth_label)
-
-        # Add final Earth & axis
-        self.play(FadeIn(earth), Create(axis))
-        self.wait(0.3)
-
-        # Sunlight appears, highlighting northern hemisphere
-        self.play(Create(sunlight))
-        self.wait(0.3)
-
-        # Labels appear
-        self.play(FadeIn(nh_summer), FadeIn(sh_winter), Write(solstice_label))
-        self.wait(1)
-
-
-class Scene4_WinterSolstice(Scene):
-    def construct(self):
-        # Sun and orbit
-        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
-        sun_label = Text("The Sun", color=WHITE).to_corner(UL)
-        orbit = Circle(radius=EARTH_ORBIT_RADIUS,
-                       color=WHITE, stroke_opacity=0.5)
-        self.add(sun, sun_label, orbit)
-
-        # Earth at bottom (December Solstice)
-        earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        earth.move_to(DOWN * EARTH_ORBIT_RADIUS)
-        # Tilt axis pointing away (Northern tilted away)
-        axis = Line(
-            earth.get_center() + UP * EARTH_RADIUS * 1.2,
-            earth.get_center() + DOWN * EARTH_RADIUS * 1.2,
-            color=RED
-        ).rotate(-AXIAL_TILT, about_point=earth.get_center())
-
-        # Sunlight rays from above
-        sunlight = VGroup()
-        for i in range(-3, 4):
-            ray = Line(
-                start=UP * 6 + RIGHT * i * 0.5,
-                end=earth.get_center() + RIGHT * i * 0.1,
-                color=YELLOW_A,
-                stroke_width=2
-            )
-            sunlight.add(ray)
-
-        # Labels
-        nh_winter = Text("Northern Hemisphere: Winter",
-                         color=WHITE).to_edge(LEFT).shift(UP * 2)
-        sh_summer = Text("Southern Hemisphere: Summer",
-                         color=WHITE).to_edge(LEFT).shift(DOWN * 2)
-        solstice_label = Text("December Solstice", color=WHITE).to_edge(DOWN)
-
-        # Animate Earth moving from top to bottom
-        start_earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        start_earth.move_to(UP * EARTH_ORBIT_RADIUS)
-        earth_label = Text("Earth", color=WHITE).next_to(
-            start_earth, UP, buff=0.1)
-        self.play(FadeIn(start_earth), FadeIn(earth_label))
-        self.wait(0.3)
-        self.play(
-            MoveAlongPath(start_earth, orbit, rate_func=linear, run_time=2),
-            MoveAlongPath(earth_label, orbit, rate_func=linear, run_time=2),
-        )
-        self.remove(start_earth, earth_label)
-
-        # Show final Earth & axis
-        self.play(FadeIn(earth), Create(axis))
-        self.wait(0.3)
-
-        # Sunlight appears, highlighting southern hemisphere
-        self.play(Create(sunlight))
-        self.wait(0.3)
-
-        # Labels appear
-        self.play(FadeIn(nh_winter), FadeIn(sh_summer), Write(solstice_label))
-        self.wait(1)
-
-
-class Scene5_Equinoxes(Scene):
-    def construct(self):
-        # Sun and orbit
-        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
-        sun_label = Text("The Sun", color=WHITE).to_corner(UL)
-        orbit = Circle(radius=EARTH_ORBIT_RADIUS,
-                       color=WHITE, stroke_opacity=0.5)
-        self.add(sun, sun_label, orbit)
-
-        # Earth at March Equinox (left)
-        earth_march = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        earth_march.move_to(LEFT * EARTH_ORBIT_RADIUS)
-        axis_march = Line(
-            earth_march.get_center() + UP * EARTH_RADIUS * 1.2,
-            earth_march.get_center() + DOWN * EARTH_RADIUS * 1.2,
-            color=RED
-        ).rotate(AXIAL_TILT, about_point=earth_march.get_center())
-
-        # Earth at September Equinox (right)
-        earth_sept = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        earth_sept.move_to(RIGHT * EARTH_ORBIT_RADIUS)
-        axis_sept = Line(
-            earth_sept.get_center() + UP * EARTH_RADIUS * 1.2,
-            earth_sept.get_center() + DOWN * EARTH_RADIUS * 1.2,
-            color=RED
-        ).rotate(AXIAL_TILT, about_point=earth_sept.get_center())
-
-        # Sunlight rays hitting equally (horizontal)
-        sunlight_equal = VGroup()
-        for i in range(-3, 4):
-            ray = Line(
-                start=RIGHT * 6 + UP * i * 0.5,
-                end=earth_march.get_center() + RIGHT * 0.1 + UP * i * 0.1,
-                color=YELLOW_A,
-                stroke_width=2
-            )
-            sunlight_equal.add(ray)
-
-        # Labels
-        march_label = Text("March Equinox", color=WHITE).to_edge(
-            DOWN).shift(LEFT * 1.5)
-        sept_label = Text("September Equinox", color=WHITE).to_edge(
-            DOWN).shift(RIGHT * 1.5)
-
-        # Animate Earth moving from December position (down) to March (left)
-        start_earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        start_earth.move_to(DOWN * EARTH_ORBIT_RADIUS)
-        earth_label = Text("Earth", color=WHITE).next_to(
-            start_earth, DOWN, buff=0.1)
-        self.play(FadeIn(start_earth), FadeIn(earth_label))
-        self.wait(0.3)
-        self.play(
-            MoveAlongPath(start_earth, orbit, rate_func=linear, run_time=2.5),
-            MoveAlongPath(earth_label, orbit, rate_func=linear, run_time=2.5),
-        )
-        self.remove(start_earth, earth_label)
-
-        # Show March Earth, axis, sunlight, label
-        self.play(FadeIn(earth_march), Create(axis_march))
-        self.wait(0.3)
-        self.play(Create(sunlight_equal))
-        self.wait(0.3)
-        self.play(Write(march_label))
-        self.wait(1)
-
-        # Transform to September: move Earth & axis, adjust sunlight, label
-        self.play(FadeOut(earth_march), FadeOut(axis_march),
-                  FadeOut(sunlight_equal), FadeOut(march_label))
-
-        # Move from left to right
-        self.play(
-            MoveAlongPath(earth_sept, orbit, rate_func=linear, run_time=3),
-        )
-        self.play(FadeIn(earth_sept), Create(axis_sept))
-        self.wait(0.3)
-
-        # Sunlight equally from left side
-        sunlight_equal2 = VGroup()
-        for i in range(-3, 4):
-            ray = Line(
-                start=LEFT * 6 + UP * i * 0.5,
-                end=earth_sept.get_center() + LEFT * 0.1 + UP * i * 0.1,
-                color=YELLOW_A,
-                stroke_width=2
-            )
-            sunlight_equal2.add(ray)
-
-        self.play(Create(sunlight_equal2))
-        self.wait(0.3)
-        self.play(Write(sept_label))
-        self.wait(1)
-
-
-class Scene6_FullAnnualCycle(Scene):
-    def construct(self):
-        # Sun and orbit
-        sun = Circle(radius=1.0, color=YELLOW, fill_opacity=1.0)
-        sun_label = Text("The Sun", color=WHITE).to_corner(UL)
-        orbit = Circle(radius=EARTH_ORBIT_RADIUS,
-                       color=WHITE, stroke_opacity=0.5)
-        self.add(sun, sun_label, orbit)
-
-        # Earth with axis (initial at right)
-        earth = Circle(radius=EARTH_RADIUS, color=BLUE, fill_opacity=1.0)
-        earth.move_to(RIGHT * EARTH_ORBIT_RADIUS)
-        axis = always_redraw(lambda: Line(
-            earth.get_center() + UP * EARTH_RADIUS * 1.2,
-            earth.get_center() + DOWN * EARTH_RADIUS * 1.2,
-            color=RED
-        ).rotate(AXIAL_TILT, about_point=earth.get_center()))
-
-        # Group Earth & axis so they move together
-        earth_and_axis = VGroup(earth, axis)
-
-        # Sunlight highlight: a semi-transparent circle sector representing illuminated half
-        illuminated = always_redraw(lambda: Dot(
-            fill_color=YELLOW_A,
-            radius=EARTH_RADIUS * 1.05,
-            fill_opacity=0.4
-        ).move_to(earth.get_center()))
-
-        # Season labels positions around orbit
-        summer_label = Text("Summer", color=WHITE).scale(
-            0.6).move_to(UP * (EARTH_ORBIT_RADIUS + 0.7))
-        autumn_label = Text("Fall", color=WHITE).scale(
-            0.6).move_to(LEFT * (EARTH_ORBIT_RADIUS + 0.7))
-        winter_label = Text("Winter", color=WHITE).scale(
-            0.6).move_to(DOWN * (EARTH_ORBIT_RADIUS + 0.7))
-        spring_label = Text("Spring", color=WHITE).scale(
-            0.6).move_to(RIGHT * (EARTH_ORBIT_RADIUS + 0.7))
-
-        # Add Earth & axis initially
-        # Animate full revolution with continuous tilt and sunlight emphasis
-        self.add(earth_and_axis)
-
-        def update_sunlight(mob, dt):
-            # Determine vector from Sun to Earth center
-            direction = normalize(earth.get_center() -
-                                  sun.get_center())
-            # Create half illumination by shifting the Dot slightly toward Sun
-            mob.move_to(earth.get_center() + direction * 0.01)
-
-        illuminated.add_updater(update_sunlight)
-        self.add(illuminated)
-
-        # Add season labels (fade in/out during animation)
-        self.play(
-            FadeIn(summer_label),
-            run_time=0.5
+            data_dot.animate.move_to(neuron_circle.get_center()),
+            FadeOut(value_x),
+            Write(value_z)
         )
         self.wait(0.5)
-        self.play(FadeOut(summer_label))
-
-        # Animation: Earth moves around orbit once (8 seconds)
         self.play(
-            MoveAlongPath(earth_and_axis, orbit, rate_func=linear, run_time=8),
+            data_dot.animate.move_to(output_text.get_right()),
+            FadeOut(value_z),
+            Write(value_y)
         )
-
-        # Sequentially display season labels approximately at quarter points
-        self.play(FadeIn(autumn_label), run_time=0.5)
         self.wait(1)
-        self.play(FadeOut(autumn_label))
 
-        self.play(FadeIn(winter_label), run_time=0.5)
+        self.play(FadeOut(data_dot, value_y, neuron_elements))
+        self.wait(0.5)
+
+        # 3. Neural Network Architecture: Layers
+        network_title = Text("Neural Network Architecture",
+                             font_size=40).to_edge(UP)
+        self.play(Transform(title, network_title))
+
+        # Create Layers
+        input_neurons = VGroup(
+            *[Circle(radius=0.3, color=BLUE_C, fill_opacity=0.7) for _ in range(3)])
+        input_neurons.arrange(DOWN, buff=0.7).shift(LEFT * 4)
+
+        hidden_neurons = VGroup(
+            *[Circle(radius=0.3, color=YELLOW_C, fill_opacity=0.7) for _ in range(4)])
+        hidden_neurons.arrange(DOWN, buff=0.7)
+
+        output_neurons = VGroup(
+            *[Circle(radius=0.3, color=GREEN_C, fill_opacity=0.7) for _ in range(2)])
+        output_neurons.arrange(DOWN, buff=0.7).shift(RIGHT * 4)
+
+        # Labels for Layers
+        input_label = Text("Input Layer", font_size=28).next_to(
+            input_neurons, DOWN, buff=0.7)
+        hidden_label = Text("Hidden Layer", font_size=28).next_to(
+            hidden_neurons, DOWN, buff=0.7)
+        output_label = Text("Output Layer", font_size=28).next_to(
+            output_neurons, DOWN, buff=0.7)
+
+        self.play(LaggedStart(
+            *[GrowFromCenter(n) for n in input_neurons], lag_ratio=0.2), Write(input_label))
+        self.play(LaggedStart(
+            *[GrowFromCenter(n) for n in hidden_neurons], lag_ratio=0.2), Write(hidden_label))
+        self.play(LaggedStart(
+            *[GrowFromCenter(n) for n in output_neurons], lag_ratio=0.2), Write(output_label))
+        self.wait(0.5)
+
+        # Draw Connections
+        connections = VGroup()
+        for in_neuron in input_neurons:
+            for hid_neuron in hidden_neurons:
+                line = Line(in_neuron.get_right(),
+                            hid_neuron.get_left(), color=GRAY_A, stroke_width=2)
+                connections.add(line)
+        for hid_neuron in hidden_neurons:
+            for out_neuron in output_neurons:
+                line = Line(hid_neuron.get_right(),
+                            out_neuron.get_left(), color=GRAY_A, stroke_width=2)
+                connections.add(line)
+
+        self.play(Create(connections, lag_ratio=0.01))
         self.wait(1)
-        self.play(FadeOut(winter_label))
 
-        self.play(FadeIn(spring_label), run_time=0.5)
+        # Explanation of Weights and Biases
+        weight_exp = Text("Each connection has a 'Weight'",
+                          font_size=28).to_edge(DL).shift(UP * 0.5)
+        bias_exp = Text("Each neuron has a 'Bias'", font_size=28).next_to(
+            weight_exp, DOWN, aligned_edge=LEFT)
+        self.play(Write(weight_exp))
+        self.play(Flash(connections[len(connections)//2], color=YELLOW))
+        self.wait(0.5)
+        self.play(Write(bias_exp))
+        self.play(
+            Indicate(hidden_neurons[len(hidden_neurons)//2], color=YELLOW))
+        self.wait(1.5)
+        self.play(FadeOut(weight_exp, bias_exp))
+
+        # 4. Forward Propagation
+        forward_title = Text("Forward Propagation", font_size=40).to_edge(UP)
+        self.play(Transform(title, forward_title))
+
+        prop_text = Text(
+            "Information flows from input to output, layer by layer.",
+            font_size=28
+        ).to_edge(DL)
+        self.play(Write(prop_text))
+        self.wait(0.5)
+
+        # Animate data flow
+        data_dots_input = VGroup(
+            *[Dot(color=RED_D, radius=0.1) for _ in input_neurons])
+        for i, neuron in enumerate(input_neurons):
+            data_dots_input[i].move_to(neuron.get_center())
+
+        input_values_text = VGroup()
+        for i, neuron in enumerate(input_neurons):
+            val = MathTex(
+                f"X_{i+1}", font_size=24).next_to(neuron, LEFT, buff=0.2)
+            input_values_text.add(val)
+        self.play(FadeIn(input_values_text, shift=LEFT))
+        self.wait(0.5)
+
+        self.play(
+            LaggedStart(*[
+                Succession(
+                    # Use copy to keep original for next layer
+                    FadeIn(data_dots_input[i].copy()),
+                    ApplyMethod(data_dots_input[i].copy(
+                    ).move_to, hid_neuron.get_center(), run_time=0.5, path_arc=PI/4)
+                ) for i, input_n in enumerate(input_neurons) for hid_neuron in hidden_neurons
+            ], lag_ratio=0.01)
+        )
+        self.wait(0.5)  # Wait for dots to arrive at hidden layer
+
+        data_dots_hidden = VGroup(
+            *[Dot(color=RED_D, radius=0.1) for _ in hidden_neurons])
+        for i, neuron in enumerate(hidden_neurons):
+            data_dots_hidden[i].move_to(neuron.get_center())
+
+        self.play(
+            LaggedStart(*[
+                Succession(
+                    FadeIn(data_dots_hidden[i].copy()),
+                    ApplyMethod(data_dots_hidden[i].copy(
+                    ).move_to, out_neuron.get_center(), run_time=0.5, path_arc=-PI/4)
+                ) for i, hidden_n in enumerate(hidden_neurons) for out_neuron in output_neurons
+            ], lag_ratio=0.01)
+        )
+        self.wait(0.5)  # Wait for dots to arrive at output layer
+
+        output_values_text = VGroup()
+        for i, neuron in enumerate(output_neurons):
+            val = MathTex(
+                f"Y_{i+1}", font_size=24).next_to(neuron, RIGHT, buff=0.2)
+            output_values_text.add(val)
+        self.play(Write(output_values_text))
+        self.wait(1.5)
+
+        self.play(FadeOut(prop_text, input_values_text,
+                  output_values_text))  # Also remove dots
+        self.wait(0.5)
+
+        # 5. Learning: Backpropagation (Simplified)
+        learning_title = Text("Learning: Backpropagation",
+                              font_size=40).to_edge(UP)
+        self.play(Transform(title, learning_title))
+
+        predicted_output_label = Text("Predicted Output", font_size=28).next_to(
+            output_neurons, RIGHT, buff=1.0)
+        target_output_label = Text("Target Output", font_size=28).next_to(
+            predicted_output_label, DOWN, buff=0.7, aligned_edge=LEFT)
+        error_label = Text("Error = Predicted - Target", font_size=28).next_to(
+            target_output_label, DOWN, buff=0.7, aligned_edge=LEFT)
+
+        self.play(Write(predicted_output_label))
+        self.wait(0.5)
+        self.play(Write(target_output_label))
+        self.wait(0.5)
+        self.play(Write(error_label))
         self.wait(1)
-        self.play(FadeOut(spring_label))
 
-        # Conclude with summary text
-        summary = Text("Earth's Revolution + Axial Tilt = Seasons",
-                       color=WHITE).scale(0.7)
-        summary.to_edge(DOWN)
-        self.play(Write(summary))
+        error_flow_line = Line(error_label.get_left(
+        ), error_label.get_left() + LEFT * 0.5, color=RED).add_tip()
+        error_flow_line_return = Line(error_label.get_top(
+        ), hidden_neurons.get_right(), color=RED).add_tip()
+        error_flow_text = Text("Error propagated backward",
+                               font_size=28).next_to(error_flow_line, DOWN)
+
+        self.play(Create(error_flow_line), FadeIn(error_flow_text))
+        self.play(error_flow_line.animate.put_start_and_end_on(
+            error_label.get_center(), output_neurons.get_center()))
+        self.wait(0.5)
+
+        # Animate backward flow and weight/bias adjustment
+        adjust_text = Text("Weights & Biases are adjusted!",
+                           font_size=32).move_to(ORIGIN)
+        self.play(
+            FadeOut(error_flow_line, error_flow_text),
+            FadeIn(adjust_text)
+        )
+        self.play(
+            Indicate(connections, scale_factor=1.1, color=YELLOW),
+            Indicate(hidden_neurons, scale_factor=1.1, color=YELLOW)
+        )
+        self.wait(1)
+
+        iteration_text = Text(
+            "This process repeats thousands of times to minimize error.",
+            font_size=30
+        ).next_to(adjust_text, DOWN, buff=0.7)
+        self.play(Write(iteration_text))
         self.wait(2)
+
+        self.play(FadeOut(predicted_output_label, target_output_label,
+                  error_label, adjust_text, iteration_text))
+        self.wait(0.5)
+
+        # 6. Conclusion / Functioning
+        conclusion_title = Text(
+            "Neural Networks In Action", font_size=40).to_edge(UP)
+        self.play(Transform(title, conclusion_title))
+
+        application_text = Text(
+            "Neural Networks excel at tasks like:",
+            font_size=32
+        ).to_edge(LEFT).shift(UP * 1.5)
+
+        app1 = Text("• Image Recognition (e.g., identifying objects)", font_size=28).next_to(
+            application_text, DOWN, buff=0.5, aligned_edge=LEFT)
+        app2 = Text("• Natural Language Processing (e.g., translation)",
+                    font_size=28).next_to(app1, DOWN, buff=0.3, aligned_edge=LEFT)
+        app3 = Text("• Predictive Analytics (e.g., stock prices)", font_size=28).next_to(
+            app2, DOWN, buff=0.3, aligned_edge=LEFT)
+
+        self.play(Write(application_text))
+        self.play(Write(app1))
+        self.play(Write(app2))
+        self.play(Write(app3))
+        self.wait(2.5)
+
+        final_message = Text(
+            "By learning complex patterns, Neural Networks drive modern AI.",
+            font_size=36, color=YELLOW
+        ).move_to(ORIGIN).shift(DOWN * 2)
+
+        self.play(FadeOut(application_text, app1, app2, app3))
+        self.play(Write(final_message))
+        self.wait(2)
+
+        self.play(FadeOut(title, final_message, input_neurons, hidden_neurons, output_neurons, connections,
+                          input_label, hidden_label, output_label))
+        self.wait(1)
