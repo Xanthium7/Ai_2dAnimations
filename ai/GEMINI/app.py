@@ -33,6 +33,7 @@ create me animation video explaning the creation and fucntioning of neural netwo
 '''
 
 
+print("Generating filtered prompt...")
 response = client.models.generate_content(
     model="gemini-2.5-flash-preview-05-20",
     config=types.GenerateContentConfig(
@@ -44,8 +45,11 @@ filtered_prompt = response.text
 print(filtered_prompt)
 
 
+print("Generating response...")
+print("__" * 50)
 response = client.models.generate_content(
-    model="gemini-2.5-flash-preview-05-20",
+    model="gemin"
+    "i-2.5-flash-preview-05-20",
     config=types.GenerateContentConfig(
         system_instruction=system_instruction),
     contents=user_prompt,
