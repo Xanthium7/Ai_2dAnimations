@@ -340,6 +340,10 @@ This section documents frequent errors encountered during code generation and th
   # Correct: Using DashedLine for dashed effect
   bias_line = DashedLine(bias_dot.get_center(), neuron_body.get_center(),
                         color=ORANGE, stroke_width=3, dash_length=0.1)
+  
+  # Correct: Using Line for solid line
+  bias_line = Line(bias_dot.get_center(), neuron_body.get_center(),
+                   color=ORANGE, stroke_width=3)
   ```
 
 ### Problem: Background Color Assignment Errors
@@ -462,6 +466,66 @@ This section documents frequent errors encountered during code generation and th
   light_direction = light_vector / np.linalg.norm(light_vector)
   ```
 
+### Problem: Vector Rotation Errors
+- **Error**: `AttributeError: 'numpy.ndarray' object has no attribute 'rotate'`
+- **Cause**: NumPy arrays and Manim vectors don't have a `.rotate()` method like some other vector libraries
+- **Common Scenarios**:
+  - Trying to rotate direction vectors: `UR.rotate(angle)`
+  - Rotating position vectors for circular arrangements: `vector.rotate(30 * DEGREES)`
+  - Creating rotated copies of directional vectors for symmetrical layouts
+- **Solutions**:
+  - Use trigonometric functions to create rotated vectors: `np.array([np.cos(angle), np.sin(angle), 0])`
+  - Use Manim's rotation matrix for 2D rotation: `rotation_matrix(angle, OUT) @ vector`
+  - For simple rotations, manually calculate: `[x*cos(θ) - y*sin(θ), x*sin(θ) + y*cos(θ), z]`
+  - Use `rotate_vector()` function if available in current Manim version
+- **Prevention**:
+  - Never use `.rotate()` method on numpy arrays or Manim vectors
+  - Always use trigonometric calculations or rotation matrices for vector rotation
+  - Test vector rotation with simple angles first (0°, 90°, 180°, 270°)
+  - Remember that angles in Manim use radians, often specified with `DEGREES` constant
+- **Valid Vector Rotation Methods**:
+  ```python
+  # Correct: Using trigonometric functions
+  angle = 45 * DEGREES
+  rotated_vector = np.array([np.cos(angle), np.sin(angle), 0])
+  
+  # Correct: Using rotation matrix (for existing vectors)
+  original_vector = RIGHT  # or any base vector
+  rotated_vector = rotation_matrix(angle, OUT) @ original_vector
+  
+  # Correct: Manual calculation for 2D rotation
+  def rotate_2d_vector(vector, angle):
+      x, y = vector[0], vector[1]
+      cos_a, sin_a = np.cos(angle), np.sin(angle)
+      return np.array([x*cos_a - y*sin_a, x*sin_a + y*cos_a, vector[2]])
+  
+  # Wrong: Using non-existent rotate method
+  # rotated_vector = UR.rotate(45 * DEGREES)  # This will fail
+  ```
+- **Code Example Fix**:
+  ```python
+  # Wrong: Using .rotate() method on vector
+  for i in range(3):
+      angle = i * 60 * DEGREES + 150 * DEGREES
+      dendrite = Line(soma.get_center(), soma.get_center() + UR.rotate(angle) * 1.5, 
+                     color=GREY_A, stroke_width=4)
+  
+  # Correct: Using trigonometric calculation
+  for i in range(3):
+      angle = i * 60 * DEGREES + 150 * DEGREES
+      direction = np.array([np.cos(angle), np.sin(angle), 0])
+      dendrite = Line(soma.get_center(), soma.get_center() + direction * 1.5, 
+                     color=GREY_A, stroke_width=4)
+  
+  # Alternative: Using rotation matrix
+  for i in range(3):
+      angle = i * 60 * DEGREES + 150 * DEGREES
+      base_direction = RIGHT  # or any base vector
+      direction = rotation_matrix(angle, OUT) @ base_direction
+      dendrite = Line(soma.get_center(), soma.get_center() + direction * 1.5, 
+                     color=GREY_A, stroke_width=4)
+  ```
+
 ## LaTeX/Tex Object Errors
 ### Problem: LaTeX Compilation Errors
 - **Error**: `Missing $ inserted` when using mathematical symbols like `\Delta`, `\alpha`, `\beta`, etc.
@@ -471,6 +535,60 @@ This section documents frequent errors encountered during code generation and th
   - Use `Tex(r"$mathematical_expression$")` or `MathTex(r"mathematical_expression")` for any mathematical content.
   - Use `Text()` for plain text without mathematical symbols.
   - Double-check all Greek letters, mathematical operators, and formulas.
+
+### Problem: LaTeX Subscript and Superscript Errors
+- **Error**: `LaTeX compilation error: Missing $ inserted` when using subscripts like `x_1`, `w_2`, etc.
+- **Cause**: Subscripts and superscripts in LaTeX require math mode, but `Tex()` doesn't automatically provide it
+- **Common Scenarios**:
+  - Using `Tex(f"x_{i+1}")` for variable labels with subscripts
+  - Creating weight labels: `Tex(f"w_{i}")` 
+  - Mathematical expressions with indices: `Tex("a_n + b_m")`
+  - Superscripts in formulas: `Tex("x^2 + y^2")`
+- **Solutions**:
+  - Use `MathTex()` instead of `Tex()` for mathematical expressions: `MathTex(f"x_{{{i+1}}}")`
+  - Wrap expressions in dollar signs: `Tex(f"$x_{{{i+1}}}$")`
+  - Use double braces for f-string variables in subscripts: `f"x_{{{variable}}}"""
+  - For simple mathematical symbols, prefer `MathTex()` over `Tex()`
+- **Prevention**:
+  - Always use `MathTex()` for any expression containing subscripts, superscripts, or mathematical operators
+  - Use `Text()` for plain text labels without mathematical notation
+  - Remember that f-strings require double braces `{{}}` around variables in LaTeX subscripts
+  - Test mathematical expressions with simple examples first
+- **Valid Mathematical Expression Methods**:
+  ```python
+  # Correct: Using MathTex for subscripts
+  label = MathTex(f"x_{{{i+1}}}", font_size=32, color=WHITE)
+  
+  # Correct: Using Tex with dollar signs
+  label = Tex(f"$x_{{{i+1}}}$", font_size=32, color=WHITE)
+  
+  # Correct: Using MathTex for mathematical expressions
+  formula = MathTex(r"E = mc^2", font_size=36, color=WHITE)
+  
+  # Correct: Using Text for plain text
+  plain_label = Text("Input Layer", font_size=28, color=WHITE)
+  
+  # Wrong: Using Tex without math mode for subscripts
+  # label = Tex(f"x_{i+1}", font_size=32)  # This will fail
+  ```
+- **Code Example Fix**:
+  ```python
+  # Wrong: Using Tex for mathematical subscripts
+  for i, dot in enumerate(input_dots):
+      label = Tex(f"x_{i+1}", font_size=32, color=TEXT_COLOR)  # LaTeX error
+  
+  # Correct: Using MathTex for mathematical subscripts
+  for i, dot in enumerate(input_dots):
+      label = MathTex(f"x_{{{i+1}}}", font_size=32, color=TEXT_COLOR)  # Works correctly
+  
+  # Alternative: Using Tex with explicit math mode
+  for i, dot in enumerate(input_dots):
+      label = Tex(f"$x_{{{i+1}}}$", font_size=32, color=TEXT_COLOR)  # Also works
+  ```
+- **F-String Escaping Rules**:
+  - Single braces `{}` are used by f-strings for variable substitution
+  - Double braces `{{}}` are literal braces in the output string
+  - For LaTeX subscripts in f-strings: `f"x_{{{variable}}}"` produces `x_{value}`
 
 ### Problem: Complex LaTeX Expressions
 - **Prevention**: Break complex formulas into smaller, manageable Tex objects. Use `TransformMatchingTex` for elegant transitions between formula states.
@@ -560,6 +678,54 @@ This section documents frequent errors encountered during code generation and th
   - For VGroups, prefer general animations like `Create()`, `FadeIn()`, `Write()`.
   - When needing specific animations on groups, iterate through individual elements or use `AnimationGroup`.
   - Test animations on single objects first, then scale to groups.
+
+### Problem: GrowArrow Animation Compatibility Errors
+- **Error**: `TypeError: Mobject.apply_points_function_about_point() got an unexpected keyword argument 'scale_tips'`
+- **Cause**: `GrowArrow` animation has compatibility issues with certain arrow types, particularly `CurvedArrow`
+- **Common Scenarios**:
+  - Using `GrowArrow(curved_arrow)` on `CurvedArrow` objects
+  - Version compatibility issues between Manim versions
+  - Internal parameter conflicts in arrow scaling operations
+- **Solutions**:
+  - Use `Create()` instead of `GrowArrow()` for curved arrows: `Create(curved_arrow)`
+  - Use `DrawBorderThenFill()` for a similar growing effect
+  - For straight arrows, `GrowArrow()` typically works fine with `Arrow` objects
+  - Use `FadeIn()` with directional shift for alternative entrance animations
+- **Prevention**:
+  - Always use `Create()` for `CurvedArrow` objects instead of `GrowArrow()`
+  - Test `GrowArrow()` with simple `Arrow` objects first before using with other arrow types
+  - Use `Create()` as the default animation for all arrow types unless specifically needing the growing effect
+  - Check Manim version compatibility when using specialized arrow animations
+- **Compatible Arrow Animations**:
+  ```python
+  # Safe: Using Create for all arrow types
+  straight_arrow = Arrow(start, end, color=BLUE)
+  curved_arrow = CurvedArrow(start, end, color=RED)
+  
+  self.play(
+      Create(straight_arrow),
+      Create(curved_arrow)
+  )
+  
+  # Risky: GrowArrow may fail with CurvedArrow
+  # self.play(GrowArrow(curved_arrow))  # May cause error
+  
+  # Safe: GrowArrow typically works with straight Arrow
+  self.play(GrowArrow(straight_arrow))  # Usually works
+  ```
+- **Code Example Fix**:
+  ```python
+  # Wrong: Using GrowArrow with CurvedArrow
+  error_arrow = CurvedArrow(start, end, color=ERROR_COLOR)
+  self.play(GrowArrow(error_arrow))  # Causes TypeError
+  
+  # Correct: Using Create with CurvedArrow
+  error_arrow = CurvedArrow(start, end, color=ERROR_COLOR)
+  self.play(Create(error_arrow))  # Works reliably
+  
+  # Alternative: Using DrawBorderThenFill for similar effect
+  self.play(DrawBorderThenFill(error_arrow))
+  ```
 
 ### Problem: Empty Mobject Operations
 - **Error**: Operations called on mobjects with no geometric points

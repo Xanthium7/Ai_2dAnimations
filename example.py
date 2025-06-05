@@ -1,571 +1,576 @@
 from manim import *
-import numpy as np
 
 
-class NeuralNetworkExplanation(MovingCameraScene):
+class NeuralNetworkExplanation2(MovingCameraScene):
     def construct(self):
-        # --- Configuration and Initial Setup ---
-        # Set a dark background for better contrast and a cinematic feel
-        # A deep dark purple-blue for a techy look
+        # --- Configuration & Aesthetics ---
+        # Dark blue-grey background, similar to 3b1b
         self.camera.background_color = "#1a1a2e"
+        TEXT_COLOR = WHITE
+        NODE_COLOR = BLUE_C
+        CONNECTION_COLOR = GREY_B
+        HIGHLIGHT_COLOR = YELLOW_B
+        ERROR_COLOR = RED_C
+        SUCCESS_COLOR = GREEN_C
+        BIAS_COLOR = ORANGE
 
-        # --- 0. Title and Introduction ---
+        # Set up camera frame for potential adjustments
+        self.camera.frame.set_width(config.frame_width)
+        self.camera.frame.set_height(config.frame_height)
+
+        # --- Scene 1: Introduction - Biological Inspiration ---
         title = Text("Understanding Neural Networks",
-                     font_size=55, color=WHITE).to_edge(UP, buff=0.8)
-        subtitle = Text("From Basic Neurons to Intelligent Systems",
-                        font_size=30, color=GREY_A).next_to(title, DOWN, buff=0.3)
-
-        self.play(
-            FadeIn(title, shift=UP * 0.5),
-            FadeIn(subtitle, shift=UP * 0.5),
-            run_time=1.5
-        )
-        self.wait(1.5)
-
-        # Conceptual AI brain / learning machine transition
-        brain_shape = Circle(radius=1.5, color=PURPLE_C,
-                             fill_opacity=0.7).scale(0.8).move_to(ORIGIN)
-        brain_label = Text("Learning Machine", font_size=28,
-                           color=WHITE).next_to(brain_shape, DOWN, buff=0.5)
-
-        self.play(
-            FadeOut(title, shift=UP * 0.5),
-            FadeOut(subtitle, shift=UP * 0.5),
-            FadeIn(brain_shape, scale=0.5),
-            FadeIn(brain_label, shift=DOWN * 0.5)
-        )
-        self.wait(1)
-
-        intro_text = Text("Inspired by the Human Brain's Learning",
-                          font_size=30, color=YELLOW_A).next_to(brain_shape, UP, buff=0.5)
-        self.play(Write(intro_text))
-        self.wait(1)
-
-        # Transition to network structure by scaling down the brain
-        self.play(FadeOut(intro_text), FadeOut(brain_label))
-        self.play(brain_shape.animate.scale(0.5).to_corner(UL, buff=1.0))
+                     font_size=56, color=TEXT_COLOR)
+        title.to_edge(UP, buff=0.8)
+        self.play(Write(title))
         self.wait(0.5)
 
-        # --- 1. The Basic Unit: The Neuron ---
-        neuron_title = Text("1. The Neuron: The Fundamental Unit",
-                            font_size=40, color=YELLOW_A).to_edge(UP, buff=0.8)
-        self.play(Write(neuron_title))
+        sub_title = Text("Inspired by the Human Brain",
+                         font_size=36, color=BLUE_C)
+        sub_title.next_to(title, DOWN, buff=0.4)
+        self.play(FadeIn(sub_title, shift=DOWN))
+        self.wait(1)
+
+        # Simplified Neuron Visual (Dendrites, Soma, Axon, Synapse)
+        soma = Circle(radius=0.8, color=NODE_COLOR, fill_opacity=0.6)
+        soma_label = Text("Soma", font_size=24, color=TEXT_COLOR).next_to(
+            soma, UP, buff=0.2)
+
+        # Dendrites (inputs)
+        dendrites = VGroup()
+        for i in range(3):
+            angle = i * 60 * DEGREES + 150 * DEGREES
+            direction = np.array([np.cos(angle), np.sin(angle), 0])
+            dendrite = Line(soma.get_center(), soma.get_center() + direction * 1.5,
+                            color=GREY_A, stroke_width=4)
+            dendrites.add(dendrite)
+        dendrites_label = Text("Dendrites (Inputs)", font_size=20, color=TEXT_COLOR).next_to(
+            dendrites[1], UP+LEFT, buff=0.2)
+
+        # Axon (output)
+        axon = Line(soma.get_center(), soma.get_center() +
+                    RIGHT * 2, color=GREY_A, stroke_width=4)
+        axon_label = Text("Axon (Output)", font_size=20,
+                          color=TEXT_COLOR).next_to(axon, RIGHT, buff=0.2)
+        axon_terminal = Circle(radius=0.2, color=GREY_A,
+                               fill_opacity=0.6).next_to(axon, RIGHT, buff=0)
+
+        # Synapse (connection to next neuron)
+        synapse_dot = Dot(axon_terminal.get_center() + RIGHT *
+                          0.5, color=HIGHLIGHT_COLOR, radius=0.1)
+        synapse_label = Text("Synapse", font_size=20, color=TEXT_COLOR).next_to(
+            synapse_dot, UR, buff=0.1)
+
+        bio_neuron = VGroup(soma, dendrites, axon, axon_terminal, synapse_dot,
+                            soma_label, dendrites_label, axon_label, synapse_label)
+        bio_neuron.center().shift(DOWN*0.5)
+
+        self.play(
+            Create(soma),
+            FadeIn(soma_label),
+            lag_ratio=0.1
+        )
+        self.play(
+            Create(dendrites),
+            FadeIn(dendrites_label),
+            lag_ratio=0.1
+        )
+        self.play(
+            Create(axon),
+            Create(axon_terminal),
+            FadeIn(axon_label),
+            lag_ratio=0.1
+        )
+        self.play(
+            Create(synapse_dot),
+            FadeIn(synapse_label)
+        )
+        self.wait(2)
+
+        # --- Transition to Artificial Neuron ---
+        self.play(
+            FadeOut(bio_neuron, shift=LEFT),
+            FadeOut(sub_title, shift=LEFT),
+            title.animate.to_edge(UP, buff=0.8)  # Keep title
+        )
         self.wait(0.5)
 
-        # Zoom in on neuron for detailed explanation
-        # Save camera state to restore later
-        self.camera.frame.save_state()
-        self.play(self.camera.frame.animate.scale(0.8).move_to(
-            ORIGIN), run_time=1)  # Adjust zoom to fit detailed neuron
+        # --- Scene 2: The Artificial Neuron (Perceptron) ---
+        new_sub_title = Text("The Artificial Neuron",
+                             font_size=36, color=BLUE_C)
+        new_sub_title.next_to(title, DOWN, buff=0.4)
+        self.play(FadeIn(new_sub_title, shift=DOWN))
         self.wait(0.5)
 
         # Neuron components
-        neuron_body = Circle(radius=0.7, color=BLUE_C, fill_opacity=0.8)
-        neuron_label = Text("Neuron", font_size=25, color=WHITE).next_to(
-            neuron_body, UP, buff=0.2)
+        neuron_body = Circle(radius=0.7, color=NODE_COLOR, fill_opacity=0.8)
+        neuron_label = Text("Neuron", font_size=28, color=TEXT_COLOR).move_to(
+            neuron_body.get_center())
 
-        # Inputs (x_i)
-        inputs_dots = VGroup()
+        # Inputs
+        input_dots = VGroup(
+            *[Dot(radius=0.15, color=HIGHLIGHT_COLOR) for _ in range(3)])
+        input_dots.arrange(DOWN, buff=0.8)
+        input_dots.next_to(neuron_body, LEFT, buff=3.0)
+
         input_labels = VGroup()
-        for i in range(3):
-            input_dot = Dot(color=GREEN_A).next_to(
-                neuron_body, LEFT, buff=1.5).shift(UP * (1 - i) * 0.7)
-            input_val = DecimalNumber(np.random.uniform(
-                0, 1), num_decimal_places=2, color=GREEN_A)
-            input_val.next_to(input_dot, LEFT, buff=0.2)
-            inputs_dots.add(input_dot)
-            input_labels.add(input_val)
+        for i, dot in enumerate(input_dots):
+            label = MathTex(f"x_{{{i+1}}}", font_size=32,
+                            color=TEXT_COLOR).next_to(dot, LEFT, buff=0.3)
+            input_labels.add(label)
 
-        input_title = Text("Inputs (x)", font_size=20, color=GREEN_A).next_to(
-            inputs_dots, LEFT, buff=0.8).shift(LEFT * 0.5)
+        # Weights
+        weight_lines = VGroup()
+        weight_labels = VGroup()
+        for i, dot in enumerate(input_dots):
+            line = Line(dot.get_center(), neuron_body.get_center(),
+                        color=CONNECTION_COLOR, stroke_width=3)
+            weight_lines.add(line)
+            weight_label = MathTex(f"w_{{{i+1}}}", font_size=28, color=TEXT_COLOR).move_to(
+                line.point_from_proportion(0.5)).shift(UP * 0.4)
+            weight_labels.add(weight_label)
 
-        # Weights (w_i) - lines connecting inputs to neuron
-        weights_lines = VGroup()
-        for input_dot in inputs_dots:
-            weight_line = Line(input_dot.get_center(
-            ), neuron_body.get_center(), color=GREY_B, stroke_width=3)
-            weights_lines.add(weight_line)
-        weights_text = Text("Weights (w)", font_size=20, color=WHITE).next_to(
-            weights_lines, DOWN, buff=0.7).shift(LEFT * 0.2)
-
-        # Bias (b)
-        bias_dot = Dot(color=ORANGE).next_to(neuron_body, UL, buff=0.7)
-        bias_label = Text("Bias (b)", font_size=20, color=ORANGE).next_to(
-            bias_dot, UP, buff=0.1)
+        # Bias
+        bias_dot = Dot(radius=0.15, color=BIAS_COLOR).next_to(
+            neuron_body, DOWN+LEFT, buff=1.5)
+        bias_label = MathTex("b", font_size=32, color=TEXT_COLOR).next_to(
+            bias_dot, LEFT, buff=0.3)
         bias_line = DashedLine(bias_dot.get_center(), neuron_body.get_center(),
-                               color=ORANGE, stroke_width=3, dash_length=0.1)
-        bias_value = DecimalNumber(
-            np.random.uniform(-1, 1), num_decimal_places=2, color=ORANGE).next_to(bias_dot, LEFT, buff=0.2)
+                               color=BIAS_COLOR, stroke_width=3, dash_length=0.1)
+        bias_line_label = Text("Bias", font_size=28, color=TEXT_COLOR).next_to(
+            bias_line, DOWN, buff=0.4)
 
-        # Output (y)
-        output_dot = Dot(color=RED_C).next_to(neuron_body, RIGHT, buff=1.5)
-        output_label = Text("Output (y)", font_size=20, color=RED_C).next_to(
-            output_dot, RIGHT, buff=0.2)
-        output_line = Line(neuron_body.get_center(),
-                           output_dot.get_center(), color=RED_C, stroke_width=3)
+        # Output
+        output_dot = Dot(radius=0.15, color=SUCCESS_COLOR)
+        output_dot.next_to(neuron_body, RIGHT, buff=2.0)
+        output_label = MathTex("y", font_size=32, color=TEXT_COLOR).next_to(
+            output_dot, RIGHT, buff=0.3)
+        output_line = Arrow(neuron_body.get_center(), output_dot.get_center(
+        ), buff=0.1, color=CONNECTION_COLOR, stroke_width=3)
+
+        neuron_group = VGroup(
+            neuron_body, neuron_label, input_dots, input_labels, weight_lines, weight_labels,
+            bias_dot, bias_label, bias_line, bias_line_label,
+            output_dot, output_label, output_line
+        )
 
         self.play(
             Create(neuron_body),
-            Write(neuron_label),
-            FadeIn(inputs_dots),
-            Write(input_title),
-            FadeIn(input_labels),
-            Create(output_line),
-            FadeIn(output_dot),
-            Write(output_label)
+            FadeIn(neuron_label)
         )
         self.wait(0.5)
 
         self.play(
-            Create(weights_lines),
-            Write(weights_text)
+            LaggedStart(*[Create(dot) for dot in input_dots], lag_ratio=0.2),
+            LaggedStart(*[FadeIn(label)
+                        for label in input_labels], lag_ratio=0.2)
         )
         self.wait(0.5)
 
         self.play(
-            FadeIn(bias_dot),
-            Write(bias_label),
+            LaggedStart(*[Create(line)
+                        for line in weight_lines], lag_ratio=0.2),
+            LaggedStart(*[FadeIn(label)
+                        for label in weight_labels], lag_ratio=0.2)
+        )
+        self.wait(0.5)
+
+        self.play(
+            Create(bias_dot),
+            FadeIn(bias_label),
             Create(bias_line),
-            FadeIn(bias_value)
+            FadeIn(bias_line_label)
         )
         self.wait(1)
 
-        # Mathematical operation inside neuron
-        sum_eq = MathTex(r"z = \Sigma(x_i \cdot w_i) + b", font_size=35,
-                         color=WHITE).next_to(neuron_body, RIGHT, buff=0.8).shift(LEFT * 0.7)
-        activation_func_text = Text(
-            "Activation Function (f)", font_size=20, color=YELLOW_A).next_to(sum_eq, UP, buff=0.5)
-        output_eq = MathTex(r"y = f(z)", font_size=35,
-                            color=WHITE).next_to(sum_eq, DOWN, buff=0.5)
+        # Weighted Sum Visualization
+        weighted_sum_formula = MathTex(
+            r"\text{Weighted Sum } Z = (x_1 w_1 + x_2 w_2 + x_3 w_3) + b",
+            font_size=36, color=TEXT_COLOR
+        ).next_to(neuron_group, DOWN, buff=1.0)
+        # Position formula safely at the bottom
+        weighted_sum_formula.to_edge(DOWN, buff=0.5)
 
-        self.play(Write(sum_eq))
-        self.play(Write(activation_func_text))
-        self.play(Write(output_eq))
+        self.play(Write(weighted_sum_formula))
+        self.wait(1)
+
+        # Highlight calculation flow
+        self.play(
+            AnimationGroup(*[
+                Indicate(input_labels[i], scale_factor=1.2) for i in range(3)
+            ], lag_ratio=0.1, run_time=1),
+            AnimationGroup(*[
+                Indicate(weight_labels[i], scale_factor=1.2) for i in range(3)
+            ], lag_ratio=0.1, run_time=1),
+            Indicate(bias_label, scale_factor=1.2)
+        )
+        self.play(Flash(neuron_body, color=HIGHLIGHT_COLOR,
+                  flash_radius=1.0, line_length=0.2))
+        self.wait(1)
+
+        # Activation Function
+        activation_func_label = MathTex(
+            r"\text{Activation Function } f(Z)",
+            font_size=36, color=TEXT_COLOR
+        ).next_to(weighted_sum_formula, DOWN, buff=0.5)
+        # Position this carefully to avoid overlap and potentially move it
+        activation_func_label.shift(LEFT*2)  # Adjust based on screen space
+
+        self.play(
+            # Remove previous formula
+            FadeOut(weighted_sum_formula, shift=DOWN*0.5),
+            FadeIn(activation_func_label, shift=UP*0.5)
+        )
+
+        activation_func_box = Rectangle(
+            width=neuron_body.get_width() * 0.9, height=neuron_body.get_height() * 0.4,
+            color=HIGHLIGHT_COLOR, fill_opacity=0.2
+        ).move_to(neuron_body.get_center() + UP * neuron_body.get_height() * 0.1)  # Place subtly inside neuron
+        activation_func_text = MathTex(
+            "f", font_size=48, color=HIGHLIGHT_COLOR).move_to(neuron_body.get_center())
+
+        self.play(
+            Create(activation_func_box),
+            FadeIn(activation_func_text)
+        )
+        self.wait(1)
+
+        self.play(
+            Create(output_line),
+            Create(output_dot),
+            FadeIn(output_label)
+        )
+        self.wait(1)
+
+        # Final Neuron Output Formula
+        final_output_formula = MathTex(
+            r"\text{Output } y = f(Z)",
+            font_size=36, color=TEXT_COLOR
+        ).move_to(activation_func_label.get_center())  # Reposition to replace the previous formula
+
+        self.play(
+            FadeOut(activation_func_label, shift=DOWN*0.5),
+            FadeIn(final_output_formula, shift=UP*0.5)
+        )
         self.wait(2)
 
-        # Animate data flow through neuron
-        value_dots = VGroup()
-        for i, val in enumerate(input_labels):
-            dot = Dot(color=YELLOW_A, radius=0.1).move_to(
-                inputs_dots[i].get_center())
-            value_dots.add(dot)
-
-        bias_flow_dot = Dot(color=YELLOW_A, radius=0.1).move_to(
-            bias_dot.get_center())
-
+        # --- Transition to Network Structure ---
         self.play(
-            FadeIn(value_dots), FadeIn(bias_flow_dot),
-            run_time=0.5
-        )
-
-        self.play(
-            LaggedStart(
-                *[dot.animate.move_to(neuron_body.get_center())
-                  for dot in value_dots],
-                bias_flow_dot.animate.move_to(neuron_body.get_center()),
-                lag_ratio=0.1,
-                run_time=1.5
-            )
-        )
-        self.play(FadeOut(value_dots), FadeOut(bias_flow_dot))
-
-        output_flow_dot = Dot(color=YELLOW_A, radius=0.1).move_to(
-            neuron_body.get_center())
-        self.add(output_flow_dot)
-        self.play(output_flow_dot.animate.move_to(
-            output_dot.get_center()), run_time=1)
-        self.play(FadeOut(output_flow_dot))
-
-        # Clean up neuron details
-        self.play(
-            FadeOut(sum_eq),
+            FadeOut(new_sub_title, shift=LEFT),
+            FadeOut(final_output_formula, shift=DOWN*0.5),
+            FadeOut(activation_func_box),
             FadeOut(activation_func_text),
-            FadeOut(output_eq),
-            FadeOut(weights_text),
-            FadeOut(bias_dot),
-            FadeOut(bias_label),
-            FadeOut(bias_line),
-            FadeOut(bias_value),
-            FadeOut(input_title),
-            FadeOut(input_labels),
-            FadeOut(inputs_dots),
-            FadeOut(weights_lines),
-            FadeOut(neuron_body),
-            FadeOut(neuron_label),
-            FadeOut(output_dot),
-            FadeOut(output_label),
-            FadeOut(output_line)
+            neuron_group.animate.scale(0.6).shift(
+                LEFT * config.frame_width / 4 + DOWN * 0.5),  # Move to prepare for network
+            title.animate.to_edge(UP, buff=0.8)  # Ensure title stays
         )
         self.wait(0.5)
-        self.play(FadeOut(neuron_title))
 
-        # --- 2. Building Blocks: Layers ---
-        # Restore camera view to original wide shot
-        self.play(Restore(self.camera.frame), run_time=1)
-        layers_title = Text("2. Layers: Input, Hidden & Output",
-                            font_size=40, color=YELLOW_A).to_edge(UP, buff=0.8)
-        self.play(Write(layers_title))
-        self.wait(1)
+        # --- Scene 3: Building a Network - Layers ---
+        network_sub_title = Text(
+            "From Neuron to Network: Layers", font_size=36, color=BLUE_C)
+        network_sub_title.next_to(title, DOWN, buff=0.4)
+        self.play(FadeIn(network_sub_title, shift=DOWN))
+        self.wait(0.5)
 
-        # Create neural network structure with layers
+        # Define node and layer properties
+        node_radius = 0.15
+        layer_buff = 2.5  # Space between layers
+        node_spacing = 0.7  # Space between nodes in a layer
+
+        # Input Layer
         input_layer_nodes = VGroup(
-            *[Dot(color=GREEN_C) for _ in range(3)]).arrange(DOWN, buff=MED_LARGE_BUFF)
+            *[Dot(radius=node_radius, color=NODE_COLOR) for _ in range(4)])
+        input_layer_nodes.arrange(DOWN, buff=node_spacing)
+        input_layer_nodes.to_edge(LEFT, buff=1.5).shift(
+            UP*1.0)  # Adjusted position for stability
+
+        input_layer_label = Text("Input Layer", font_size=28, color=TEXT_COLOR)
+        input_layer_label.next_to(input_layer_nodes, DOWN, buff=0.5)
+
+        # Hidden Layer 1
         hidden_layer_1_nodes = VGroup(
-            *[Dot(color=BLUE_C) for _ in range(4)]).arrange(DOWN, buff=MED_LARGE_BUFF)
-        hidden_layer_2_nodes = VGroup(
-            *[Dot(color=BLUE_C) for _ in range(3)]).arrange(DOWN, buff=MED_LARGE_BUFF)
+            *[Dot(radius=node_radius, color=NODE_COLOR) for _ in range(5)])
+        hidden_layer_1_nodes.arrange(DOWN, buff=node_spacing)
+        hidden_layer_1_nodes.next_to(input_layer_nodes, RIGHT, buff=layer_buff)
+
+        hidden_layer_1_label = Text(
+            "Hidden Layer 1", font_size=28, color=TEXT_COLOR)
+        hidden_layer_1_label.next_to(hidden_layer_1_nodes, DOWN, buff=0.5)
+
+        # Output Layer
         output_layer_nodes = VGroup(
-            *[Dot(color=RED_C) for _ in range(2)]).arrange(DOWN, buff=MED_LARGE_BUFF)
+            *[Dot(radius=node_radius, color=NODE_COLOR) for _ in range(2)])
+        output_layer_nodes.arrange(DOWN, buff=node_spacing)
+        output_layer_nodes.next_to(
+            hidden_layer_1_nodes, RIGHT, buff=layer_buff)
 
-        # Position layers horizontally
-        input_layer_nodes.shift(LEFT * 5)
-        hidden_layer_1_nodes.next_to(input_layer_nodes, RIGHT, buff=2.5)
-        hidden_layer_2_nodes.next_to(hidden_layer_1_nodes, RIGHT, buff=2.5)
-        output_layer_nodes.next_to(hidden_layer_2_nodes, RIGHT, buff=2.5)
+        output_layer_label = Text(
+            "Output Layer", font_size=28, color=TEXT_COLOR)
+        output_layer_label.next_to(output_layer_nodes, DOWN, buff=0.5)
 
-        # Labels for layers
-        input_label = Text("Input Layer", font_size=25, color=GREEN_A).next_to(
-            input_layer_nodes, DOWN, buff=0.7)
-        hidden_label_1 = Text("Hidden Layer 1", font_size=25, color=BLUE_A).next_to(
-            hidden_layer_1_nodes, DOWN, buff=0.7)
-        hidden_label_2 = Text("Hidden Layer 2", font_size=25, color=BLUE_A).next_to(
-            hidden_layer_2_nodes, DOWN, buff=0.7)
-        output_label = Text("Output Layer", font_size=25, color=RED_A).next_to(
-            output_layer_nodes, DOWN, buff=0.7)
+        # Connections (Lines)
+        connections_1_2 = VGroup()
+        for in_node in input_layer_nodes:
+            for hid_node in hidden_layer_1_nodes:
+                connections_1_2.add(Line(in_node.get_center(), hid_node.get_center(
+                ), color=CONNECTION_COLOR, stroke_width=1.5))
 
-        # Create nodes and labels
+        connections_2_3 = VGroup()
+        for hid_node in hidden_layer_1_nodes:
+            for out_node in output_layer_nodes:
+                connections_2_3.add(Line(hid_node.get_center(
+                ), out_node.get_center(), color=CONNECTION_COLOR, stroke_width=1.5))
+
+        # Group entire network for scaling/positioning later
+        full_network = VGroup(
+            input_layer_nodes, input_layer_label,
+            hidden_layer_1_nodes, hidden_layer_1_label,
+            output_layer_nodes, output_layer_label,
+            connections_1_2, connections_2_3
+        )
+        full_network.center()  # Center the network
+        # Move it slightly down to accommodate the title and sub-title
+        full_network.shift(DOWN * 0.5)
+
+        # Create the network layers
         self.play(
             LaggedStart(
                 FadeIn(input_layer_nodes, shift=LEFT),
-                FadeIn(input_label, shift=DOWN),
+                FadeIn(input_layer_label, shift=DOWN),
                 lag_ratio=0.2
             )
         )
-        self.wait(0.3)
+        self.wait(0.5)
+
         self.play(
             LaggedStart(
                 FadeIn(hidden_layer_1_nodes, shift=LEFT),
-                FadeIn(hidden_label_1, shift=DOWN),
+                FadeIn(hidden_layer_1_label, shift=DOWN),
                 lag_ratio=0.2
             )
         )
-        self.wait(0.3)
-        self.play(
-            LaggedStart(
-                FadeIn(hidden_layer_2_nodes, shift=LEFT),
-                FadeIn(hidden_label_2, shift=DOWN),
-                lag_ratio=0.2
-            )
-        )
-        self.wait(0.3)
+        self.wait(0.5)
+
         self.play(
             LaggedStart(
                 FadeIn(output_layer_nodes, shift=LEFT),
-                FadeIn(output_label, shift=DOWN),
+                FadeIn(output_layer_label, shift=DOWN),
                 lag_ratio=0.2
             )
         )
-        self.wait(1)
-
-        # Connect layers (weights/connections)
-        all_connections = VGroup()
-        for layer1, layer2 in zip([input_layer_nodes, hidden_layer_1_nodes, hidden_layer_2_nodes],
-                                  [hidden_layer_1_nodes, hidden_layer_2_nodes, output_layer_nodes]):
-            for node1 in layer1:
-                for node2 in layer2:
-                    line = Line(node1.get_center(), node2.get_center(),
-                                color=GREY_D, stroke_width=2)
-                    all_connections.add(line)
-
-        self.play(Create(all_connections, run_time=2))
-        self.wait(1)
-
-        # Group entire network for easy manipulation
-        full_network = VGroup(input_layer_nodes, hidden_layer_1_nodes, hidden_layer_2_nodes, output_layer_nodes,
-                              input_label, hidden_label_1, hidden_label_2, output_label,
-                              all_connections)
-
-        # Scale and center the network for the next sections
-        self.play(FadeOut(layers_title))
-        self.play(full_network.animate.scale(0.8).move_to(ORIGIN))
-        self.wait(1)
-
-        # --- 3. Functioning: The Forward Pass ---
-        forward_pass_title = Text(
-            "3. Functioning: The Forward Pass", font_size=40, color=YELLOW_A).to_edge(UP, buff=0.8)
-        self.play(Write(forward_pass_title))
-        self.wait(1)
-
-        # Simulate data input
-        input_data_text = Text("Input Data", font_size=28, color=GREEN_A).next_to(
-            input_layer_nodes, LEFT, buff=0.8)
-        self.play(Write(input_data_text))
         self.wait(0.5)
 
-        # Animate data flowing through the network
-        flow_animations = []
-        # Create initial data dots
-        initial_data_dots = VGroup()
-        for node in input_layer_nodes:
-            initial_data_dots.add(Dot(color=GREEN_A).move_to(
-                node.get_center() + LEFT * 0.5))
-        self.play(FadeIn(initial_data_dots, shift=RIGHT*0.5))
-
-        # Data flow through the entire network
-        # This requires iterating through individual connections and animating dots
-
-        # Get all paths (lines) in sequence for data flow
-        all_paths_ordered = []
-        for layer1, layer2 in zip([input_layer_nodes, hidden_layer_1_nodes, hidden_layer_2_nodes],
-                                  [hidden_layer_1_nodes, hidden_layer_2_nodes, output_layer_nodes]):
-            for node1 in layer1:
-                for node2 in layer2:
-                    all_paths_ordered.append(
-                        Line(node1.get_center(), node2.get_center()))
-
-        # Animate dots moving along these paths
-        # Using a slight lag for each dot to give a continuous flow appearance
-        self.play(
-            LaggedStart(
-                *[
-                    MoveAlongPath(
-                        Dot(color=YELLOW_A, radius=0.08).move_to(line.get_start()), line, rate_func=linear, run_time=1.5
-                    )
-                    for line in all_paths_ordered
-                ],
-                # Fade out initial data dots after they "enter"
-                FadeOut(initial_data_dots),
-                lag_ratio=0.005  # Small lag for continuous flow
-            ),
-            run_time=3.0  # Overall run time for the flow
-        )
-        self.wait(0.5)
-
-        prediction_text = Text("Prediction", font_size=28, color=RED_A).next_to(
-            output_layer_nodes, RIGHT, buff=0.8)
-        self.play(Write(prediction_text))
-        self.wait(1.5)
-
-        self.play(
-            FadeOut(input_data_text),
-            FadeOut(prediction_text),
-            FadeOut(forward_pass_title)
-        )
-
-        # --- 4. Training: The Learning Process ---
-        training_title = Text("4. Training: Learning from Errors",
-                              font_size=40, color=YELLOW_A).to_edge(UP, buff=0.8)
-        self.play(Write(training_title))
+        # Draw connections
+        self.play(Create(connections_1_2), run_time=1.5)
+        self.play(Create(connections_2_3), run_time=1.5)
         self.wait(1)
 
-        # Show actual vs. predicted and loss calculation
-        actual_value_label = Text(
-            "Actual Value", font_size=28, color=BLUE_A).to_edge(UR, buff=0.8)
-        actual_val_num = DecimalNumber(0.9, num_decimal_places=2, color=BLUE_A).next_to(
-            actual_value_label, DOWN, buff=0.2)
-
-        predicted_value_label = Text("Predicted Value", font_size=28, color=RED_A).next_to(
-            output_layer_nodes, RIGHT, buff=0.8)
-        predicted_val_num = DecimalNumber(0.2, num_decimal_places=2, color=RED_A).next_to(
-            predicted_value_label, DOWN, buff=0.2)
-
-        # Shift predicted_value_label and num to be near output nodes
-        predicted_value_label.move_to(
-            output_layer_nodes.get_center() + RIGHT * 2.5 + UP * 1.5)
-        predicted_val_num.next_to(predicted_value_label, DOWN, buff=0.2)
-
-        self.play(
-            FadeIn(actual_value_label), FadeIn(actual_val_num),
-            FadeIn(predicted_value_label), FadeIn(predicted_val_num)
-        )
-        self.wait(1)
-
-        error_arrow = CurvedArrow(
-            predicted_val_num.get_bottom(), actual_val_num.get_top(), color=ORANGE)
-        error_label = Text("Error", font_size=28, color=ORANGE).next_to(
-            error_arrow, RIGHT, buff=0.3)
-        self.play(Create(error_arrow), Write(error_label))
-        self.wait(1)
-
-        loss_function_eq = MathTex(
-            r"\text{Loss} = (\text{Actual} - \text{Predicted})^2",
-            font_size=35, color=WHITE
-        ).to_edge(DL, buff=0.8)
-        self.play(Write(loss_function_eq))
-        self.wait(1.5)
-
-        # Backpropagation Concept
-        backprop_title = Text("Backpropagation: Adjusting Weights", font_size=30,
-                              color=YELLOW_A).next_to(training_title, DOWN, buff=0.3)
-        self.play(Write(backprop_title))
-        self.wait(0.5)
-
-        self.play(
-            FadeOut(actual_value_label), FadeOut(actual_val_num),
-            FadeOut(predicted_value_label), FadeOut(predicted_val_num),
-            FadeOut(error_arrow), FadeOut(error_label),
-            FadeOut(loss_function_eq)
-        )
-
-        # Animate error flowing backwards and weights adjusting
-        # Iterate through reversed paths (from output to input) for backprop visualization
-        back_flow_animations = []
-        for line in reversed(all_paths_ordered):
-            dot = Dot(color=ORANGE, radius=0.08).move_to(line.get_end())
-            back_flow_animations.append(MoveAlongPath(
-                dot, line.reverse_points(), rate_func=linear, run_time=1.5))
-
-        # Simulate weight adjustment by temporarily brightening connections
-        self.play(
-            LaggedStart(
-                *back_flow_animations,
-                lag_ratio=0.005  # Small lag for continuous flow
-            ),
-            all_connections.animate.set_color(
-                YELLOW_A).set_stroke(width=3).set_opacity(1),
-            run_time=3.0
-        )
-        self.wait(0.5)
-
-        weight_adjust_text = Text("Weights are Adjusted", font_size=28, color=GREEN_A).next_to(
-            full_network, DOWN, buff=0.7)
-        self.play(Write(weight_adjust_text))
-        self.play(
-            all_connections.animate.set_color(GREY_B).set_stroke(
-                width=2).set_opacity(1)  # Restore color, but imply change
-        )
-        self.wait(1)
-
-        self.play(
-            FadeOut(weight_adjust_text),
-            FadeOut(backprop_title)
-        )
-
-        # Iteration cycle and loss decrease graph
-        iteration_circle = Circle(radius=0.7, color=PURPLE_A, stroke_width=5).move_to(
-            full_network.get_center())
-        iteration_text = Text("Repeat Many Times", font_size=30, color=WHITE).move_to(
-            iteration_circle).shift(UP*0.5)
-        loss_decrease_text = Text("Loss Decreases", font_size=25, color=RED_C).next_to(
-            iteration_text, DOWN, buff=0.3)
-
-        self.play(Create(iteration_circle))
-        self.play(Write(iteration_text), Write(loss_decrease_text))
-        self.wait(1)
-
-        # Show loss graph decreasing
-        loss_graph_axes = Axes(
-            x_range=[0, 5, 1],
-            y_range=[0, 1, 0.2],
-            x_length=4,
-            y_length=3,
-            axis_config={"color": GREY_B, "font_size": 20},
-            tips=False
-        ).to_edge(DR, buff=0.8)  # Position safely within the frame
-        loss_graph_axes.add_coordinates()
-        loss_label_x = Text("Epochs", font_size=20, color=GREY_A).next_to(
-            loss_graph_axes.x_axis, DOWN, buff=0.1)
-        loss_label_y = Text("Loss", font_size=20, color=GREY_A).next_to(
-            loss_graph_axes.y_axis, LEFT, buff=0.1).shift(UP*0.3)
-
-        loss_curve = ParametricFunction(
-            # Exponential decay for loss
-            lambda t: loss_graph_axes.c2p(t, np.exp(-t/2) * 0.8 + 0.1),
-            t_range=[0, 5],
-            color=RED_C,
-            stroke_width=4
-        )
-
-        self.play(Create(loss_graph_axes), FadeIn(
-            loss_label_x), FadeIn(loss_label_y))
-        self.play(Create(loss_curve, run_time=2))
-        self.wait(1.5)
-
-        self.play(
-            FadeOut(iteration_circle),
-            FadeOut(iteration_text),
-            FadeOut(loss_decrease_text),
-            FadeOut(loss_graph_axes),
-            FadeOut(loss_label_x),
-            FadeOut(loss_label_y),
-            FadeOut(loss_curve),
-            FadeOut(training_title)
-        )
-        self.wait(0.5)
-
-        # --- 5. Making Predictions (Inference) ---
-        prediction_phase_title = Text(
-            "5. Making Predictions (Inference)", font_size=40, color=YELLOW_A).to_edge(UP, buff=0.8)
-        self.play(Write(prediction_phase_title))
-        self.wait(1)
-
-        # Re-emphasize forward pass, now with confidence and the idea of a "trained" network
-        trained_text = Text("Trained Network Ready for Use", font_size=30,
-                            color=GREEN_A).next_to(full_network, DOWN, buff=0.7)
-        self.play(Write(trained_text))
-        self.wait(1)
-
-        # Simulate new input data flow
-        input_data_text_2 = Text("New Input Data", font_size=28, color=GREEN_A).next_to(
-            input_layer_nodes, LEFT, buff=0.8)
-        self.play(Write(input_data_text_2))
-        self.wait(0.5)
-
-        # Initial data dots for new input
-        data_dots_2 = VGroup()
-        for node in input_layer_nodes:
-            data_dots_2.add(Dot(color=GREEN_A).move_to(
-                node.get_center() + LEFT * 0.5))
-        self.play(FadeIn(data_dots_2, shift=RIGHT*0.5))
-
-        # Re-run data flow animation
-        self.play(
-            LaggedStart(
-                *[
-                    MoveAlongPath(
-                        Dot(color=YELLOW_A, radius=0.08).move_to(line.get_start()), line, rate_func=linear, run_time=1.5
-                    )
-                    for line in all_paths_ordered
-                ],
-                FadeOut(data_dots_2),
-                lag_ratio=0.005
-            ),
-            run_time=3.0
-        )
-        self.wait(0.5)
-
-        final_prediction_text = Text("Accurate Prediction!", font_size=30, color=RED_A).next_to(
-            output_layer_nodes, RIGHT, buff=0.8)
-        self.play(Write(final_prediction_text))
+        # Explain connections (weights)
+        connection_explanation = Text("Each connection has a weight (w) and each neuron has a bias (b).",
+                                      font_size=28, color=TEXT_COLOR)
+        connection_explanation.to_edge(DOWN, buff=0.5)
+        self.play(Write(connection_explanation))
         self.wait(2)
 
+        # --- Scene 4: Functioning - Forward Propagation ---
         self.play(
-            FadeOut(input_data_text_2),
-            FadeOut(final_prediction_text),
-            FadeOut(trained_text),
-            FadeOut(prediction_phase_title)
+            FadeOut(connection_explanation, shift=DOWN*0.5),
+            FadeOut(network_sub_title, shift=LEFT)
         )
         self.wait(0.5)
 
-        # --- 6. Conclusion ---
-        conclusion_title = Text(
-            "Neural Networks in Action", font_size=45, color=WHITE).to_edge(UP, buff=0.8)
-        summary_text = Text(
-            "Powerful algorithms for learning from data.\n"
-            "Used in image recognition, natural language processing, and more!",
-            font_size=30, color=GREY_A, line_spacing=1.5
-        ).next_to(conclusion_title, DOWN, buff=0.5)
+        forward_prop_title = Text(
+            "How Information Flows: Forward Propagation", font_size=36, color=BLUE_C)
+        forward_prop_title.next_to(title, DOWN, buff=0.4)
+        self.play(FadeIn(forward_prop_title, shift=DOWN))
+        self.wait(0.5)
 
-        self.play(Write(conclusion_title))
-        # Center and slightly enlarge the network
-        self.play(full_network.animate.center().scale(1.2), run_time=1.5)
-        self.play(Write(summary_text))
+        # Simulate data flow
+        data_in = Text("Input Data", font_size=28, color=HIGHLIGHT_COLOR).next_to(
+            input_layer_nodes, LEFT, buff=0.5)
+        self.play(FadeIn(data_in, shift=LEFT))
+        self.wait(0.5)
+
+        # Pulse inputs
+        self.play(
+            AnimationGroup(*[
+                Flash(node, color=HIGHLIGHT_COLOR, flash_radius=node_radius*2) for node in input_layer_nodes
+            ], lag_ratio=0.1, run_time=1)
+        )
+
+        # Animate data moving through connections and nodes
+        path_segments_1 = []
+        for line in connections_1_2:
+            data_dot = Dot(line.get_start(),
+                           color=HIGHLIGHT_COLOR, radius=node_radius*0.8)
+            path_segments_1.append(MoveAlongPath(data_dot, line, run_time=0.3))
+            self.add(data_dot)  # Add to scene so it's visible during movement
+
+        self.play(
+            # Lag ratio to make dots appear staggered
+            AnimationGroup(*path_segments_1, lag_ratio=0.01),
+            AnimationGroup(*[
+                Flash(node, color=HIGHLIGHT_COLOR, flash_radius=node_radius*2) for node in hidden_layer_1_nodes
+            ], lag_ratio=0.05, run_time=1)
+        )
+        # Remove the moving dots
+        self.remove(*[p.mobject for p in path_segments_1])
+
+        path_segments_2 = []
+        for line in connections_2_3:
+            data_dot = Dot(line.get_start(),
+                           color=HIGHLIGHT_COLOR, radius=node_radius*0.8)
+            path_segments_2.append(MoveAlongPath(data_dot, line, run_time=0.3))
+            self.add(data_dot)
+
+        self.play(
+            AnimationGroup(*path_segments_2, lag_ratio=0.01),
+            AnimationGroup(*[
+                Flash(node, color=HIGHLIGHT_COLOR, flash_radius=node_radius*2) for node in output_layer_nodes
+            ], lag_ratio=0.05, run_time=1)
+        )
+        self.remove(*[p.mobject for p in path_segments_2])
+
+        final_output_text = Text("Output", font_size=28, color=SUCCESS_COLOR).next_to(
+            output_layer_nodes, RIGHT, buff=0.5)
+        self.play(FadeIn(final_output_text, shift=RIGHT))
+        self.wait(2)
+
+        # --- Scene 5: Learning - Backpropagation (Simplified) ---
+        self.play(
+            FadeOut(data_in, shift=LEFT),
+            FadeOut(final_output_text, shift=RIGHT),
+            FadeOut(forward_prop_title, shift=LEFT)
+        )
+        self.wait(0.5)
+
+        learning_title = Text(
+            "Learning from Mistakes: Backpropagation", font_size=36, color=BLUE_C)
+        learning_title.next_to(title, DOWN, buff=0.4)
+        self.play(FadeIn(learning_title, shift=DOWN))
+        self.wait(0.5)
+
+        # Explain prediction vs. actual
+        predicted_output = Text("Predicted Output", font_size=28, color=HIGHLIGHT_COLOR).next_to(
+            output_layer_nodes[0], UP, buff=0.5)
+        actual_output = Text("Actual Output", font_size=28, color=SUCCESS_COLOR).next_to(
+            output_layer_nodes[1], DOWN, buff=0.5)
+        error_label = Text("Error!", font_size=36, color=ERROR_COLOR).next_to(
+            output_layer_nodes, RIGHT, buff=1.0)
+
+        self.play(
+            FadeIn(predicted_output),
+            FadeIn(actual_output)
+        )
+        self.wait(1)
+
+        self.play(Write(error_label))
+        self.play(Indicate(error_label))
+        self.wait(1)
+
+        # Show error flowing backwards
+        error_arrow = CurvedArrow(
+            error_label.get_center(),
+            hidden_layer_1_nodes.get_center() + LEFT*1.0,
+            color=ERROR_COLOR,
+            stroke_width=5
+        )
+        error_flow_text = Text(
+            "Error Signal Flowing Backwards", font_size=28, color=ERROR_COLOR)
+        error_flow_text.next_to(error_arrow, DOWN, buff=0.5)
+        error_flow_text.to_edge(DOWN, buff=0.5)  # Position safely
+
+        self.play(
+            Create(error_arrow),
+            Write(error_flow_text)
+        )
+        self.wait(1)
+
+        # Highlight connections being updated
+        update_highlight_group = VGroup()
+        for conn in connections_1_2:
+            update_highlight_group.add(conn.copy().set_color(
+                HIGHLIGHT_COLOR).set_stroke_width(5))
+        for conn in connections_2_3:
+            update_highlight_group.add(conn.copy().set_color(
+                HIGHLIGHT_COLOR).set_stroke_width(5))
+
+        self.play(
+            LaggedStart(*[Flash(conn, color=HIGHLIGHT_COLOR, flash_radius=0.1)
+                        for conn in connections_2_3], lag_ratio=0.01),
+            LaggedStart(*[Flash(conn, color=HIGHLIGHT_COLOR, flash_radius=0.1)
+                        for conn in connections_1_2], lag_ratio=0.01),
+            run_time=2
+        )
+
+        weight_update_text = Text("Adjusting Weights and Biases", font_size=28,
+                                  color=TEXT_COLOR).next_to(error_flow_text, DOWN, buff=0.5)
+        # Further adjustments for text stacking
+        weight_update_text.to_edge(DOWN, buff=0.1)
+
+        self.play(Write(weight_update_text))
+        self.wait(1.5)
+
+        iteration_text = Text(
+            "This process repeats for many iterations (epochs).", font_size=28, color=TEXT_COLOR)
+        iteration_text.next_to(weight_update_text, DOWN, buff=0.1)
+        # Position again to prevent overlap
+        iteration_text.to_edge(DOWN, buff=0.1)
+
+        self.play(Write(iteration_text))
+        self.wait(2)
+
+        # --- Scene 6: Conclusion & Applications ---
+        self.play(
+            FadeOut(predicted_output, shift=UP),
+            FadeOut(actual_output, shift=DOWN),
+            FadeOut(error_label),
+            FadeOut(error_arrow),
+            FadeOut(error_flow_text),
+            FadeOut(weight_update_text),
+            FadeOut(iteration_text),
+            FadeOut(learning_title, shift=LEFT)
+        )
+        self.wait(0.5)
+
+        summary_title = Text(
+            "Neural Networks: Powerful & Versatile", font_size=36, color=BLUE_C)
+        summary_title.next_to(title, DOWN, buff=0.4)
+        self.play(FadeIn(summary_title, shift=DOWN))
+        self.wait(0.5)
+
+        # Applications
+        applications_list = BulletedList(
+            "Image Recognition (e.g., face detection)",
+            "Natural Language Processing (e.g., ChatGPT)",
+            "Medical Diagnosis (e.g., detecting diseases)",
+            "Self-driving Cars (e.g., perception, decision-making)",
+            "Recommendation Systems (e.g., Netflix, Amazon)",
+            font_size=32, color=TEXT_COLOR
+        )
+        applications_list.arrange(DOWN, buff=0.4, aligned_edge=LEFT)
+        applications_list.next_to(full_network, RIGHT, buff=1.0)
+        applications_list.to_edge(RIGHT, buff=0.8).shift(
+            UP*0.5)  # Position to the right, centered vertically
+
+        self.play(
+            # Fade out the network diagram as applications appear
+            FadeOut(full_network),
+            FadeIn(applications_list, shift=RIGHT)
+        )
+        self.wait(1)
+
+        self.play(
+            LaggedStart(*[FadeIn(item, shift=LEFT)
+                        for item in applications_list], lag_ratio=0.5)
+        )
         self.wait(3)
 
         # Final fade out
         self.play(
-            FadeOut(full_network),
-            FadeOut(conclusion_title),
-            FadeOut(summary_text)
+            FadeOut(title),
+            FadeOut(summary_title),
+            FadeOut(applications_list)
         )
         self.wait(1)
