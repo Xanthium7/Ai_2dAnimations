@@ -469,7 +469,6 @@ class NeuralNetworkExplanation2(MovingCameraScene):
         self.play(Indicate(error_label))
         self.wait(1)
 
-        # Show error flowing backwards
         error_arrow = CurvedArrow(
             error_label.get_center(),
             hidden_layer_1_nodes.get_center() + LEFT*1.0,
