@@ -10,3 +10,7 @@ wheels/
 .venv
 .history
 .env
+videos/
+Tex/
+texts/
+images/

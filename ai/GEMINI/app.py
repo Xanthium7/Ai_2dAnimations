@@ -1,9 +1,9 @@
-
 from google import genai
 from google.genai import types
 from dotenv import load_dotenv
 import os
 import sys
+import re
 
 load_dotenv()
 
@@ -22,6 +22,13 @@ def load_user_filter_instruction():
         __file__), "..", "..", "prompts", "userFilterPrompt.md")
     with open(user_filter_instruction_path, "r", encoding="utf-8") as f:
         return f.read()
+
+
+def extract_python_code_blocks(text):
+    """Extract content between ```python and ``` markers"""
+    pattern = r'```python\s*\n(.*?)\n```'
+    matches = re.findall(pattern, text, re.DOTALL)
+    return '\n\n'.join(matches) if matches else text
 
 
 system_instruction = load_system_instruction()
@@ -48,13 +55,14 @@ print(filtered_prompt)
 print("Generating response...")
 print("__" * 50)
 response = client.models.generate_content(
-    model="gemin"
-    "i-2.5-flash-preview-05-20",
+    model="gemini-2.5-flash-preview-05-20",
     config=types.GenerateContentConfig(
         system_instruction=system_instruction),
     contents=user_prompt,
 )
 
 print(response.text)
+extracted_code = extract_python_code_blocks(response.text)
+
 with open("response.txt", "w", encoding="utf-8") as f:
-    f.write(response.text)
+    f.write(extracted_code)
